@@ -49,8 +49,8 @@ Optional local database choices:
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd Skincare_jsx-4
+git clone https://github.com/aditisoni-17/Skincare_Recommendation_App.git
+cd Skincare_Recommendation_App
 ```
 
 ### 2. Install dependencies
@@ -525,4 +525,4 @@ sequenceDiagram
 
 ## Author
 
-Built as a portfolio full-stack project focused on modern React UI, backend integration, authentication, and product-oriented user experience.
+Aditi Soni
