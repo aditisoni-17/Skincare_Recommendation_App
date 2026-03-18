@@ -25,7 +25,7 @@ const OrderConfirmation = () => {
               <div className="mt-8 grid gap-4 text-left sm:grid-cols-3">
                 <div className="soft-panel p-5">
                   <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Order ID</p>
-                  <p className="mt-3 break-all text-base font-semibold text-slate-900">{order.id}</p>
+                  <p className="mt-3 break-all [overflow-wrap:anywhere] text-base font-semibold text-slate-900">{order.id}</p>
                 </div>
                 <div className="soft-panel p-5">
                   <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Date</p>
