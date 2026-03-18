@@ -6,7 +6,7 @@ export const PRODUCTS = [
     rating: 4.8,
     reviewCount: 128,
     image:
-      'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     description:
       "Gentle cleanser that removes impurities while maintaining skin's moisture barrier.",
     category: 'cleansers',
@@ -33,7 +33,7 @@ export const PRODUCTS = [
     rating: 4.7,
     reviewCount: 89,
     image:
-      'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     description: 'Rich cream that deeply hydrates and nourishes dry skin.',
     category: 'moisturizers',
     isNew: false,
@@ -59,7 +59,7 @@ export const PRODUCTS = [
     rating: 4.5,
     reviewCount: 92,
     image:
-      'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     description:
       'Anti-aging cream with encapsulated retinol for gentle yet effective results.',
     category: 'moisturizers',
@@ -80,4 +80,3 @@ export const PRODUCTS = [
     isSale: false,
   },
 ];
-
