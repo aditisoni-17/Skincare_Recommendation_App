@@ -1,24 +1,26 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Bars3Icon,
   XMarkIcon,
-  UserIcon,
   ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useCart } from '../contexts/CartContext.jsx';
 
-const Navbar = ({ user }) => {
+const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  const { totalItems } = useCart();
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    setCartCount(cart.reduce((total, item) => total + item.quantity, 0));
-  }, []);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    logout();
     navigate('/login');
   };
 
@@ -31,75 +33,96 @@ const Navbar = ({ user }) => {
   ];
 
   return (
-    <nav className="bg-white shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-2xl font-bold text-pink-600">
+    <nav className="sticky top-0 z-40 border-b border-white/60 bg-white/85 backdrop-blur-xl">
+      <div className="page-container px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-[72px] items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-8">
+            <div className="flex-shrink-0">
+              <Link to="/" className="text-2xl font-bold tracking-tight text-pink-600">
                 Noorify
               </Link>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div className="hidden lg:flex lg:items-center lg:gap-1">
               {navigation.map((item) => (
-                <Link
+                <NavLink
                   key={item.name}
                   to={item.href}
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  className={({ isActive }) =>
+                    `rounded-xl px-4 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? 'bg-pink-50 text-pink-700'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`
+                  }
                 >
                   {item.name}
-                </Link>
+                </NavLink>
               ))}
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="hidden lg:flex lg:items-center">
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/cart"
-                  className="relative p-1 text-gray-400 hover:text-gray-500"
+                  className="relative rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
+                  aria-label="Open cart"
                 >
                   <ShoppingCartIcon className="h-6 w-6" />
-                  {cartCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-pink-600 rounded-full">
-                      {cartCount}
+                  {totalItems > 0 && (
+                    <span className="absolute right-0 top-0 inline-flex h-5 min-w-[1.25rem] -translate-y-1/3 translate-x-1/3 items-center justify-center rounded-full bg-pink-600 px-1.5 text-[11px] font-bold leading-none text-white">
+                      {totalItems}
                     </span>
                   )}
                 </Link>
                 <Link
                   to="/profile"
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                  className="btn-ghost"
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                  className="btn-secondary px-4 py-2.5"
                 >
                   Logout
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-3">
                 <Link
                   to="/login"
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                  className="btn-ghost"
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-pink-600 text-white hover:bg-pink-700 px-4 py-2 rounded-md text-sm font-medium"
+                  className="btn-primary px-4 py-2.5"
                 >
                   Sign up
                 </Link>
               </div>
             )}
           </div>
-          <div className="-mr-2 flex items-center sm:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
+            {user && (
+              <Link
+                to="/cart"
+                className="relative rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                aria-label="Open cart"
+              >
+                <ShoppingCartIcon className="h-6 w-6" />
+                {totalItems > 0 && (
+                  <span className="absolute right-0 top-0 inline-flex h-5 min-w-[1.25rem] -translate-y-1/3 translate-x-1/3 items-center justify-center rounded-full bg-pink-600 px-1.5 text-[11px] font-bold leading-none text-white">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+            )}
             <button
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500"
+              className="inline-flex items-center justify-center rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
@@ -114,62 +137,58 @@ const Navbar = ({ user }) => {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${mobileMenuOpen ? 'block' : 'hidden'} sm:hidden`}>
-        <div className="pt-2 pb-3 space-y-1">
+      <div className={`${mobileMenuOpen ? 'block' : 'hidden'} border-t border-slate-200 bg-white lg:hidden`}>
+        <div className="page-container px-4 py-4 sm:px-6">
+          <div className="space-y-1">
           {navigation.map((item) => (
-            <Link
+            <NavLink
               key={item.name}
               to={item.href}
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              className={({ isActive }) =>
+                `block rounded-xl px-4 py-3 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-pink-50 text-pink-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`
+              }
             >
               {item.name}
-            </Link>
+            </NavLink>
           ))}
-        </div>
-        <div className="pt-4 pb-3 border-t border-gray-200">
+          </div>
+        <div className="mt-4 border-t border-slate-200 pt-4">
           {user ? (
-            <div className="space-y-1">
-              <Link
-                to="/cart"
-                className="relative flex items-center pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-              >
-                <ShoppingCartIcon className="h-6 w-6 mr-2" />
-                Cart
-                {cartCount > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-pink-600 rounded-full">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+            <div className="space-y-2">
               <Link
                 to="/profile"
-                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Profile
               </Link>
               <button
                 onClick={handleLogout}
-                className="block w-full text-left pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                className="block w-full rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Logout
               </button>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Link
                 to="/login"
-                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Sign in
               </Link>
               <Link
                 to="/signup"
-                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                className="btn-primary flex w-full"
               >
                 Sign up
               </Link>
             </div>
           )}
+        </div>
         </div>
       </div>
     </nav>

@@ -2,3 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-rose-50/40 text-slate-900 antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(251, 207, 232, 0.35), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(254, 205, 211, 0.3), transparent 28%);
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    @apply bg-pink-200 text-slate-900;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply px-4 py-20 sm:px-6 lg:px-8;
+  }
+
+  .page-container {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .page-header {
+    @apply mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between;
+  }
+
+  .page-title {
+    @apply text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl;
+  }
+
+  .page-subtitle {
+    @apply max-w-2xl text-sm leading-6 text-slate-600 sm:text-base;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-white/70 bg-white/90 shadow-sm shadow-slate-200/70 backdrop-blur;
+  }
+
+  .soft-panel {
+    @apply rounded-2xl border border-slate-200 bg-slate-50/80;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-pink-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-pink-700 hover:shadow-lg hover:shadow-pink-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-pink-300 disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-lg hover:shadow-slate-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition duration-200 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2;
+  }
+
+  .input-base {
+    @apply mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-100;
+  }
+
+  .input-base.input-error {
+    @apply border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100;
+  }
+
+  .field-label {
+    @apply block text-sm font-medium text-slate-700;
+  }
+
+  .helper-text {
+    @apply mt-2 text-sm text-slate-500;
+  }
+
+  .error-text {
+    @apply mt-2 text-sm font-medium text-red-600;
+  }
+
+  .status-banner {
+    @apply rounded-2xl border px-4 py-3 text-sm;
+  }
+
+  .status-banner-error {
+    @apply border-red-200 bg-red-50 text-red-700;
+  }
+
+  .status-banner-success {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  .status-banner-info {
+    @apply border-slate-200 bg-slate-50 text-slate-700;
+  }
+
+  .product-card {
+    @apply surface-card flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-100/60;
+  }
+
+  .interactive-card {
+    @apply surface-card transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-100/60;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold tracking-wide;
+  }
+}

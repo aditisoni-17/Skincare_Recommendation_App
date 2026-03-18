@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShoppingCartIcon,
@@ -8,203 +8,136 @@ import {
   XMarkIcon,
   PlusIcon,
   MinusIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useCart } from '../contexts/CartContext.jsx';
+import { getProducts } from '../services/productService.js';
 
 const Products = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Hydrating Cleanser',
-      price: 24.99,
-      rating: 4.8,
-      reviewCount: 128,
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Gentle cleanser that removes impurities while maintaining skin\'s moisture barrier.',
-      category: 'cleansers',
-      isNew: true,
-      isSale: false,
-    },
-    {
-      id: 2,
-      name: 'Vitamin C Serum',
-      price: 39.99,
-      rating: 4.9,
-      reviewCount: 256,
-      image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Brightening serum with 20% vitamin C for radiant, even-toned skin.',
-      category: 'serums',
-      isNew: false,
-      isSale: true,
-    },
-    {
-      id: 3,
-      name: 'Moisturizing Cream',
-      price: 29.99,
-      rating: 4.7,
-      reviewCount: 89,
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Rich cream that deeply hydrates and nourishes dry skin.',
-      category: 'moisturizers',
-      isNew: false,
-      isSale: false,
-    },
-    {
-      id: 4,
-      name: 'Sunscreen SPF 50',
-      price: 34.99,
-      rating: 4.6,
-      reviewCount: 167,
-      image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Broad-spectrum protection with a lightweight, non-greasy formula.',
-      category: 'sunscreen',
-      isNew: true,
-      isSale: false,
-    },
-    {
-      id: 5,
-      name: 'Retinol Night Cream',
-      price: 49.99,
-      rating: 4.5,
-      reviewCount: 92,
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Anti-aging cream with encapsulated retinol for gentle yet effective results.',
-      category: 'moisturizers',
-      isNew: false,
-      isSale: true,
-    },
-    {
-      id: 6,
-      name: 'Clay Mask',
-      price: 27.99,
-      rating: 4.8,
-      reviewCount: 143,
-      image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      description: 'Purifying mask that draws out impurities and refines pores.',
-      category: 'masks',
-      isNew: false,
-      isSale: false,
-    },
-  ]);
-
-  const [cart, setCart] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [minRating, setMinRating] = useState(0);
+  const { cart, addItem, updateQuantity, totalItems } = useCart();
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        if (!isMounted) return;
+        setProducts(data.products || []);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setFetchError(error.message || 'Products are temporarily unavailable. Please try again shortly.');
+        setProducts([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const addToCart = (product) => {
-    const existingItem = cart.find((item) => item.id === product.id);
-    let newCart;
-
-    if (existingItem) {
-      newCart = cart.map((item) =>
-        item.id === product.id
-          ? { ...item, quantity: (item.quantity || 1) + 1 }
-          : item
-      );
-    } else {
-      newCart = [...cart, { ...product, quantity: 1 }];
-    }
-
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
+    addItem(product, 1);
     setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    window.setTimeout(() => setShowSuccess(false), 2200);
   };
 
-  const removeFromCart = (productId) => {
-    const newCart = cart.filter((item) => item.id !== productId);
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
-  };
+  const filteredProducts = useMemo(
+    () =>
+      products.filter((product) => {
+        if (selectedCategory !== 'all' && product.category !== selectedCategory) {
+          return false;
+        }
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) {
-      removeFromCart(productId);
-      return;
-    }
+        if (priceRange !== 'all') {
+          const [min, max] = priceRange.split('-').map(Number);
+          if (product.price < min || product.price > max) {
+            return false;
+          }
+        }
 
-    const newCart = cart.map((item) =>
-      item.id === productId ? { ...item, quantity: newQuantity } : item
-    );
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
-  };
+        if (minRating > 0 && product.rating < minRating) {
+          return false;
+        }
 
-  const filteredProducts = products.filter((product) => {
-    if (selectedCategory !== 'all' && product.category !== selectedCategory) {
-      return false;
-    }
-    if (priceRange !== 'all') {
-      const [min, max] = priceRange.split('-').map(Number);
-      if (product.price < min || product.price > max) {
-        return false;
-      }
-    }
-    if (minRating > 0 && product.rating < minRating) {
-      return false;
-    }
-    return true;
-  });
+        return true;
+      }),
+    [minRating, priceRange, products, selectedCategory]
+  );
 
   const categories = ['all', 'cleansers', 'serums', 'moisturizers', 'sunscreen', 'masks'];
   const priceRanges = [
-    { value: 'all', label: 'All Prices' },
+    { value: 'all', label: 'All prices' },
     { value: '0-25', label: 'Under $25' },
-    { value: '25-50', label: '$25 - $50' },
-    { value: '50-100', label: '$50 - $100' },
+    { value: '25-50', label: '$25 to $50' },
+    { value: '50-100', label: '$50 to $100' },
   ];
   const ratings = ['all', '4.5', '4.0', '3.5', '3.0'];
 
+  const productInCart = (id) => cart.find((item) => item.id === id);
+  const handleImageError = (event) => {
+    event.currentTarget.src = 'https://placehold.co/800x800/fdf2f8/9d174d?text=Noorify';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900">Our Products</h2>
-          <div className="flex items-center space-x-4">
+    <div className="page-shell">
+      <div className="page-container">
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Our products</h1>
+            <p className="page-subtitle">
+              Explore essentials curated for different routines, concerns, and skin types with cleaner filtering and stronger responsiveness.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setShowFilters((prev) => !prev)}
+              className="btn-secondary"
             >
-              <FunnelIcon className="h-5 w-5 mr-2" />
-              Filters
+              <FunnelIcon className="mr-2 h-5 w-5" />
+              {showFilters ? 'Hide filters' : 'Show filters'}
             </button>
             <button
               onClick={() => navigate('/cart')}
-              className="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
+              className="btn-primary relative"
             >
-              <ShoppingCartIcon className="h-5 w-5 mr-2" />
+              <ShoppingCartIcon className="mr-2 h-5 w-5" />
               Cart
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.reduce((total, item) => total + (item.quantity || 1), 0)}
+              {totalItems > 0 && (
+                <span className="absolute -right-2 -top-2 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
+                  {totalItems}
                 </span>
               )}
             </button>
           </div>
         </div>
 
+        {fetchError && <div className="status-banner status-banner-error mb-6">{fetchError}</div>}
+
         {showFilters && (
-          <div className="bg-white p-6 rounded-lg shadow mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <section className="surface-card mb-8 p-5 sm:p-6">
+            <div className="grid gap-5 md:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="field-label" htmlFor="category">
                   Category
                 </label>
                 <select
+                  id="category"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                  className="input-base"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -214,13 +147,14 @@ const Products = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price Range
+                <label className="field-label" htmlFor="priceRange">
+                  Price range
                 </label>
                 <select
+                  id="priceRange"
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                  className="input-base"
                 >
                   {priceRanges.map((range) => (
                     <option key={range.value} value={range.value}>
@@ -230,236 +164,224 @@ const Products = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Minimum Rating
+                <label className="field-label" htmlFor="minRating">
+                  Minimum rating
                 </label>
                 <select
-                  value={minRating}
-                  onChange={(e) => setMinRating(Number(e.target.value))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                  id="minRating"
+                  value={String(minRating || 'all')}
+                  onChange={(e) => setMinRating(e.target.value === 'all' ? 0 : Number(e.target.value))}
+                  className="input-base"
                 >
                   {ratings.map((rating) => (
                     <option key={rating} value={rating}>
-                      {rating === 'all' ? 'All Ratings' : `${rating}+ Stars`}
+                      {rating === 'all' ? 'All ratings' : `${rating}+ stars`}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => {
-            const cartItem = cart.find((item) => item.id === product.id);
-            return (
-              <div
-                key={product.id}
-                className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className="relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-64 object-cover"
-                  />
-                  {product.isNew && (
-                    <span className="absolute top-2 left-2 bg-pink-600 text-white text-xs font-medium px-2 py-1 rounded">
-                      New
-                    </span>
-                  )}
-                  {product.isSale && (
-                    <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
-                      Sale
-                    </span>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {product.name}
-                    </h3>
-                    <button
-                      onClick={() => setSelectedProduct(product)}
-                      className="text-gray-400 hover:text-gray-500"
-                    >
-                      <HeartIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-4">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <StarIcon
-                          key={star}
-                          className={`h-5 w-5 ${
-                            star <= Math.round(product.rating)
-                              ? 'text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="ml-2 text-sm text-gray-500">
-                      ({product.reviewCount})
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-medium text-gray-900">
-                      ${product.price.toFixed(2)}
-                    </span>
-                    {cartItem ? (
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() =>
-                            updateQuantity(product.id, cartItem.quantity - 1)
-                          }
-                          className="p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <MinusIcon className="h-4 w-4" />
-                        </button>
-                        <span className="text-sm font-medium">
-                          {cartItem.quantity}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(product.id, cartItem.quantity + 1)
-                          }
-                          className="p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <PlusIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => addToCart(product)}
-                        className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-                      >
-                        Add to Cart
-                      </button>
-                    )}
-                  </div>
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="surface-card overflow-hidden">
+                <div className="h-64 animate-pulse bg-slate-200" />
+                <div className="space-y-4 p-6">
+                  <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
+                  <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                  <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
+                  <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <section className="surface-card px-6 py-14 text-center">
+            <h2 className="text-xl font-semibold text-slate-900">No products found</h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600">
+              Try adjusting the category, price range, or rating filters to see more results.
+            </p>
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                setPriceRange('all');
+                setMinRating(0);
+              }}
+              className="btn-secondary mt-6"
+            >
+              Reset filters
+            </button>
+          </section>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.map((product) => {
+              const cartItem = productInCart(product.id);
+              return (
+                <article key={product.id} className="product-card">
+                  <div className="relative">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-64 w-full object-cover"
+                      onError={handleImageError}
+                    />
+                    <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
+                      <div className="flex gap-2">
+                        {product.isNew && <span className="badge bg-white text-pink-700">New</span>}
+                        {product.isSale && <span className="badge bg-rose-600 text-white">Sale</span>}
+                      </div>
+                      <button
+                        onClick={() => setSelectedProduct(product)}
+                        className="rounded-full bg-white/90 p-2 text-slate-500 shadow-sm transition hover:text-pink-600"
+                        aria-label={`View ${product.name} details`}
+                      >
+                        <HeartIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">{product.name}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{product.description}</p>
+                      </div>
+                      <span className="text-lg font-semibold text-slate-900">${Number(product.price).toFixed(2)}</span>
+                    </div>
+
+                    <div className="mt-5 flex items-center gap-2 text-sm text-slate-500">
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <StarIcon
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= Math.round(product.rating) ? 'text-amber-400' : 'text-slate-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span>{Number(product.rating || 0).toFixed(1)}</span>
+                      <span>({product.reviewCount || 0})</span>
+                    </div>
+
+                    <div className="mt-6">
+                      {cartItem ? (
+                        <div className="flex items-center justify-between rounded-2xl border border-pink-100 bg-pink-50/70 p-3">
+                          <span className="text-sm font-medium text-pink-700">In cart</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                              className="rounded-full border border-pink-200 bg-white p-2 text-pink-700 transition hover:bg-pink-100"
+                              aria-label={`Decrease ${product.name} quantity`}
+                            >
+                              <MinusIcon className="h-4 w-4" />
+                            </button>
+                            <span className="min-w-6 text-center text-sm font-semibold text-slate-900">
+                              {cartItem.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                              className="rounded-full border border-pink-200 bg-white p-2 text-pink-700 transition hover:bg-pink-100"
+                              aria-label={`Increase ${product.name} quantity`}
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button onClick={() => addToCart(product)} className="btn-primary w-full">
+                          Add to cart
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-medium text-gray-900">
-                {selectedProduct.name}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <div className="surface-card max-h-[90vh] w-full max-w-4xl overflow-y-auto p-5 sm:p-6">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-900">{selectedProduct.name}</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  {selectedProduct.description}
+                </p>
+              </div>
               <button
                 onClick={() => setSelectedProduct(null)}
-                className="text-gray-400 hover:text-gray-500"
+                className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label="Close product details"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
-                className="w-full h-64 object-cover rounded-lg"
+                className="h-72 w-full rounded-2xl object-cover sm:h-96"
+                onError={handleImageError}
               />
-              <div>
-                <p className="text-gray-500 mb-4">
-                  {selectedProduct.description}
-                </p>
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <StarIcon
-                        key={star}
-                        className={`h-5 w-5 ${
-                          star <= Math.round(selectedProduct.rating)
-                            ? 'text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm text-gray-500">
-                    ({selectedProduct.reviewCount} reviews)
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-2xl font-medium text-gray-900">
-                    ${selectedProduct.price.toFixed(2)}
-                  </span>
-                  {cart.find((item) => item.id === selectedProduct.id) ? (
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          updateQuantity(
-                            selectedProduct.id,
-                            cart.find((item) => item.id === selectedProduct.id)
-                              .quantity - 1
-                          )
-                        }
-                        className="p-1 rounded-full hover:bg-gray-100"
-                      >
-                        <MinusIcon className="h-4 w-4" />
-                      </button>
-                      <span className="text-sm font-medium">
-                        {
-                          cart.find((item) => item.id === selectedProduct.id)
-                            .quantity
-                        }
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(
-                            selectedProduct.id,
-                            cart.find((item) => item.id === selectedProduct.id)
-                              .quantity + 1
-                          )
-                        }
-                        className="p-1 rounded-full hover:bg-gray-100"
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                      </button>
+              <div className="flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <StarIcon
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(selectedProduct.rating) ? 'text-amber-400' : 'text-slate-200'
+                          }`}
+                        />
+                      ))}
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        addToCart(selectedProduct);
-                        setSelectedProduct(null);
-                      }}
-                      className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-                    >
-                      Add to Cart
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">
-                      Benefits
-                    </h4>
-                    <ul className="list-disc list-inside text-sm text-gray-500">
-                      <li>Gentle on all skin types</li>
-                      <li>Dermatologist tested</li>
-                      <li>Cruelty-free</li>
-                      <li>Vegan formula</li>
-                    </ul>
+                    <span>{Number(selectedProduct.rating || 0).toFixed(1)}</span>
+                    <span>({selectedProduct.reviewCount || 0} reviews)</span>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">
-                      Ingredients
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Key ingredients: Hyaluronic Acid, Niacinamide, Ceramides
+                  <div className="mt-6 soft-panel p-5">
+                    <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Price</p>
+                    <p className="mt-2 text-3xl font-semibold text-slate-900">
+                      ${Number(selectedProduct.price).toFixed(2)}
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-6 space-y-3">
+                  <button
+                    onClick={() => addToCart(selectedProduct)}
+                    className="btn-primary w-full"
+                  >
+                    Add to cart
+                  </button>
+                  <button
+                    onClick={() => navigate('/cart')}
+                    className="btn-secondary w-full"
+                  >
+                    View cart
+                  </button>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccess && (
+        <div className="fixed right-4 top-24 z-50 max-w-sm rounded-2xl border border-emerald-200 bg-white px-4 py-3 shadow-lg shadow-emerald-100">
+          <div className="flex items-start gap-3">
+            <CheckCircleIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Added to cart</p>
+              <p className="mt-1 text-sm text-slate-600">Your product was added successfully.</p>
             </div>
           </div>
         </div>
@@ -468,4 +390,4 @@ const Products = () => {
   );
 };
 
-export default Products; 
+export default Products;

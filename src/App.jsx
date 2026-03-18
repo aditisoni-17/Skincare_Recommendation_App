@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,40 +11,30 @@ import SkinCareRoutine from './pages/SkinCareRoutine';
 import SkinAnalysis from './pages/SkinAnalysis';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-
-const PrivateRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem('user'));
-  return user ? children : <Navigate to="/login" />;
-};
+import OrderConfirmation from './pages/OrderConfirmation.jsx';
+import PrivateRoute from './components/PrivateRoute.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 
 const App = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    if (storedUser) {
-      setUser(storedUser);
-    }
-  }, []);
-
   return (
     <Router>
+      <ScrollToTop />
       <div className="flex flex-col min-h-screen">
-        <Navbar user={user} />
+        <Navbar />
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
-            <Route path="/login" element={<Login setUser={setUser} />} />
-            <Route path="/signup" element={<Signup setUser={setUser} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
             {/* Protected Routes */}
             <Route
               path="/profile"
               element={
                 <PrivateRoute>
-                  <Profile user={user} setUser={setUser} />
+                  <Profile />
                 </PrivateRoute>
               }
             />
@@ -53,7 +42,7 @@ const App = () => {
               path="/skin-test"
               element={
                 <PrivateRoute>
-                  <SkinTest user={user} />
+                  <SkinTest />
                 </PrivateRoute>
               }
             />
@@ -61,7 +50,7 @@ const App = () => {
               path="/skin-care-routine"
               element={
                 <PrivateRoute>
-                  <SkinCareRoutine user={user} />
+                  <SkinCareRoutine />
                 </PrivateRoute>
               }
             />
@@ -69,7 +58,7 @@ const App = () => {
               path="/skin-analysis"
               element={
                 <PrivateRoute>
-                  <SkinAnalysis user={user} />
+                  <SkinAnalysis />
                 </PrivateRoute>
               }
             />
@@ -86,6 +75,14 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <Checkout />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/order-confirmation"
+              element={
+                <PrivateRoute>
+                  <OrderConfirmation />
                 </PrivateRoute>
               }
             />

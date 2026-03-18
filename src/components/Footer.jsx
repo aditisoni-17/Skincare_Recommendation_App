@@ -4,7 +4,9 @@ import {
   PhoneIcon,
   MapPinIcon,
   ClockIcon,
-  ChatBubbleLeftRightIcon,
+  GlobeAltIcon,
+  SparklesIcon,
+  ShieldCheckIcon,
   ArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
@@ -12,111 +14,107 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
+    <footer className="border-t border-slate-200 bg-slate-950 text-white">
+      <div className="page-container px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h3 className="text-lg font-semibold mb-4">ScreenCare</h3>
-            <p className="text-gray-400">
-              Your trusted partner in screen protection and eye care solutions.
+            <h3 className="text-lg font-semibold text-white">Noorify</h3>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
+              Modern skincare guidance, curated products, and personalized routines designed to make healthy skin feel approachable.
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <span className="badge bg-white/10 text-white">
+                <SparklesIcon className="mr-1.5 h-4 w-4" />
+                Tailored routines
+              </span>
+              <span className="badge bg-white/10 text-white">
+                <ShieldCheckIcon className="mr-1.5 h-4 w-4" />
+                Trusted essentials
+              </span>
+            </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-semibold">Quick Links</h3>
+            <ul className="mt-4 space-y-3 text-sm">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-white">
+                <Link to="/" className="text-slate-400 transition hover:text-white">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/products" className="text-gray-400 hover:text-white">
+                <Link to="/products" className="text-slate-400 transition hover:text-white">
                   Products
                 </Link>
               </li>
               <li>
-                <Link to="/screen-test" className="text-gray-400 hover:text-white">
-                  Screen Test
+                <Link to="/skin-test" className="text-slate-400 transition hover:text-white">
+                  Skin Test
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-400 hover:text-white">
-                  Contact Us
+                <Link to="/profile" className="text-slate-400 transition hover:text-white">
+                  Profile
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-            <ul className="space-y-2">
-              <li className="flex items-center">
-                <EnvelopeIcon className="h-5 w-5 mr-2 text-gray-400" />
-                <span className="text-gray-400">support@screencare.com</span>
+            <h3 className="text-lg font-semibold">Contact</h3>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li className="flex items-start">
+                <EnvelopeIcon className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400" />
+                <span className="text-slate-400">support@noorify.com</span>
               </li>
-              <li className="flex items-center">
-                <PhoneIcon className="h-5 w-5 mr-2 text-gray-400" />
-                <span className="text-gray-400">+918448843999</span>
+              <li className="flex items-start">
+                <PhoneIcon className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400" />
+                <span className="text-slate-400">+91 84488 43999</span>
               </li>
-              <li className="flex items-center">
-                <MapPinIcon className="h-5 w-5 mr-2 text-gray-400" />
-                <span className="text-gray-400">123 Screen Care Ave, San Francisco, CA</span>
+              <li className="flex items-start">
+                <MapPinIcon className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400" />
+                <span className="text-slate-400">123 Wellness Lane, San Francisco, CA</span>
               </li>
-              <li className="flex items-center">
-                <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
-                <span className="text-gray-400">Mon-Fri: 9:00 AM - 6:00 PM</span>
+              <li className="flex items-start">
+                <ClockIcon className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400" />
+                <span className="text-slate-400">Mon to Fri, 9:00 AM to 6:00 PM</span>
               </li>
             </ul>
           </div>
 
-          {/* Social Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-            <div className="flex space-x-4">
+            <h3 className="text-lg font-semibold">Explore</h3>
+            <p className="mt-4 text-sm leading-6 text-slate-400">
+              Browse best sellers, build a personalized routine, and checkout confidently from any device.
+            </p>
+            <div className="mt-5 flex gap-3">
               <a
-                href="https://facebook.com"
+                href="https://github.com/lostinnlight/Skincare_jsx.git"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
+                className="inline-flex rounded-xl border border-white/10 bg-white/5 p-3 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                aria-label="Open repository"
               >
-                <ChatBubbleLeftRightIcon className="h-6 w-6" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <ChatBubbleLeftRightIcon className="h-6 w-6" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <ChatBubbleLeftRightIcon className="h-6 w-6" />
+                <GlobeAltIcon className="h-5 w-5" />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800">
-          <div className="flex justify-between items-center">
-            <p className="text-gray-400">
-              © {currentYear} ScreenCare. All rights reserved.
-            </p>
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="text-gray-400 hover:text-white"
-            >
-              <ArrowUpIcon className="h-6 w-6" />
-            </button>
-          </div>
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-400">
+            © {currentYear} Noorify. All rights reserved.
+          </p>
+          <p className="text-sm text-slate-500">
+            Built for personalized skincare shopping and guidance.
+          </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="inline-flex h-10 w-10 items-center justify-center self-start rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white sm:self-auto"
+            aria-label="Scroll to top"
+          >
+            <ArrowUpIcon className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </footer>

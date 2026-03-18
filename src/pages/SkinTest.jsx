@@ -1,262 +1,241 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaceSmileIcon,
-  FaceFrownIcon,
-  SunIcon,
-  MoonIcon,
-  ArrowPathIcon,
   CheckCircleIcon,
   SparklesIcon,
-  HeartIcon,
   ShieldCheckIcon,
   LightBulbIcon,
 } from '@heroicons/react/24/outline';
+import { useCart } from '../contexts/CartContext.jsx';
+
+const productImages = {
+  cleanser:
+    'https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?auto=format&fit=crop&w=1200&q=80',
+  serum:
+    'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=1200&q=80',
+  moisturizer:
+    'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80',
+  mask:
+    'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80',
+  retinol:
+    'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1200&q=80',
+};
+
+const questions = [
+  {
+    id: 'skinType',
+    question: 'What best describes your skin type?',
+    options: [
+      { value: 'normal', label: 'Normal, balanced, and comfortable' },
+      { value: 'dry', label: 'Dry, tight, or flaky' },
+      { value: 'oily', label: 'Oily and shine-prone' },
+      { value: 'combination', label: 'Combination with an oily T-zone' },
+      { value: 'sensitive', label: 'Sensitive or easily irritated' },
+    ],
+    tip: 'Wash your face and wait about 30 minutes before checking how it feels without products.',
+  },
+  {
+    id: 'concerns',
+    question: 'What are your main skin concerns?',
+    options: [
+      { value: 'acne', label: 'Acne and breakouts' },
+      { value: 'aging', label: 'Fine lines and wrinkles' },
+      { value: 'darkSpots', label: 'Dark spots and uneven tone' },
+      { value: 'redness', label: 'Redness and irritation' },
+      { value: 'dryness', label: 'Dryness and dehydration' },
+      { value: 'oiliness', label: 'Excess oil production' },
+      { value: 'pores', label: 'Visible pores' },
+      { value: 'dullness', label: 'Dull complexion' },
+    ],
+    multiple: true,
+    tip: 'Select every concern that feels relevant right now. The routine can account for more than one priority.',
+  },
+  {
+    id: 'sensitivity',
+    question: 'How sensitive is your skin?',
+    options: [
+      { value: 'notSensitive', label: 'Not sensitive' },
+      { value: 'slightlySensitive', label: 'Slightly sensitive' },
+      { value: 'moderatelySensitive', label: 'Moderately sensitive' },
+      { value: 'verySensitive', label: 'Very sensitive' },
+    ],
+    tip: 'Sensitivity can change with weather, stress, or introducing too many actives at once.',
+  },
+  {
+    id: 'lifestyle',
+    question: 'What best describes your lifestyle?',
+    options: [
+      { value: 'active', label: 'Active and outdoors often' },
+      { value: 'sedentary', label: 'Mostly indoors' },
+      { value: 'stressful', label: 'Busy and high-stress' },
+    ],
+    tip: 'Lifestyle shapes how much hydration, cleansing, and barrier support your routine may need.',
+  },
+  {
+    id: 'environment',
+    question: 'What environment do you spend most of your time in?',
+    options: [
+      { value: 'dry', label: 'Dry climate' },
+      { value: 'humid', label: 'Humid climate' },
+      { value: 'polluted', label: 'Urban or polluted area' },
+      { value: 'temperate', label: 'Temperate climate' },
+    ],
+    tip: 'Pollution, humidity, and dryness all change what your skin needs from day to day.',
+  },
+  {
+    id: 'routine',
+    question: 'How would you describe your current routine?',
+    options: [
+      { value: 'minimal', label: 'Minimal, mostly cleansing only' },
+      { value: 'basic', label: 'Basic, cleanser and moisturizer' },
+      { value: 'moderate', label: 'Consistent multi-step routine' },
+      { value: 'extensive', label: 'Extensive, many products and actives' },
+    ],
+    tip: 'The best routine is the one you can realistically follow every day.',
+  },
+];
 
 const SkinTest = () => {
   const navigate = useNavigate();
+  const { addItem } = useCart();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectionError, setSelectionError] = useState('');
 
-  const questions = [
-    {
-      id: 'skinType',
-      question: 'What best describes your skin type?',
-      options: [
-        { value: 'normal', label: 'Normal - Balanced, not too oily or dry' },
-        { value: 'dry', label: 'Dry - Feels tight, flaky, or rough' },
-        { value: 'oily', label: 'Oily - Shiny, prone to breakouts' },
-        { value: 'combination', label: 'Combination - Oily T-zone, dry cheeks' },
-        { value: 'sensitive', label: 'Sensitive - Easily irritated or red' },
-      ],
-      tip: 'Wash your face and wait 30 minutes before determining your skin type. Observe how your skin feels and looks.',
-    },
-    {
-      id: 'concerns',
-      question: 'What are your main skin concerns? (Select all that apply)',
-      options: [
-        { value: 'acne', label: 'Acne and breakouts' },
-        { value: 'aging', label: 'Fine lines and wrinkles' },
-        { value: 'darkSpots', label: 'Dark spots and hyperpigmentation' },
-        { value: 'redness', label: 'Redness and irritation' },
-        { value: 'dryness', label: 'Dryness and dehydration' },
-        { value: 'oiliness', label: 'Excess oil production' },
-        { value: 'pores', label: 'Large pores' },
-        { value: 'dullness', label: 'Dull complexion' },
-      ],
-      multiple: true,
-      tip: 'Consider both immediate concerns and long-term goals for your skin.',
-    },
-    {
-      id: 'sensitivity',
-      question: 'How sensitive is your skin?',
-      options: [
-        { value: 'notSensitive', label: 'Not sensitive at all' },
-        { value: 'slightlySensitive', label: 'Slightly sensitive' },
-        { value: 'moderatelySensitive', label: 'Moderately sensitive' },
-        { value: 'verySensitive', label: 'Very sensitive' },
-      ],
-      tip: 'Sensitivity can be affected by weather, products, and stress levels.',
-    },
-    {
-      id: 'lifestyle',
-      question: 'What best describes your lifestyle?',
-      options: [
-        { value: 'active', label: 'Active - Regular exercise, outdoor activities' },
-        { value: 'sedentary', label: 'Sedentary - Mostly indoor, limited physical activity' },
-        { value: 'stressful', label: 'High-stress - Busy schedule, irregular routine' },
-      ],
-      tip: 'Your lifestyle affects your skin\'s needs and how it responds to products.',
-    },
-    {
-      id: 'environment',
-      question: 'What environment do you spend most of your time in?',
-      options: [
-        { value: 'dry', label: 'Dry climate' },
-        { value: 'humid', label: 'Humid climate' },
-        { value: 'polluted', label: 'Urban/polluted area' },
-        { value: 'temperate', label: 'Temperate climate' },
-      ],
-      tip: 'Environmental factors can significantly impact your skin\'s condition.',
-    },
-    {
-      id: 'routine',
-      question: 'How would you describe your current skincare routine?',
-      options: [
-        { value: 'minimal', label: 'Minimal - Basic cleansing only' },
-        { value: 'basic', label: 'Basic - Cleanser and moisturizer' },
-        { value: 'moderate', label: 'Moderate - Multiple steps, consistent' },
-        { value: 'extensive', label: 'Extensive - Full routine, multiple products' },
-      ],
-      tip: 'Be honest about your current routine to get the most accurate recommendations.',
-    },
-  ];
+  const current = questions[currentQuestion];
+  const progress = Math.round(((currentQuestion + 1) / questions.length) * 100);
 
   const handleAnswer = (value) => {
-    if (questions[currentQuestion].multiple) {
+    setSelectionError('');
+
+    if (current.multiple) {
       setAnswers((prev) => ({
         ...prev,
-        [questions[currentQuestion].id]: {
-          ...prev[questions[currentQuestion].id],
-          [value]: !prev[questions[currentQuestion].id]?.[value],
+        [current.id]: {
+          ...prev[current.id],
+          [value]: !prev[current.id]?.[value],
         },
       }));
-    } else {
-      setAnswers((prev) => ({
-        ...prev,
-        [questions[currentQuestion].id]: value,
-      }));
+      return;
     }
+
+    setAnswers((prev) => ({ ...prev, [current.id]: value }));
+  };
+
+  const hasSelection = () => {
+    if (current.multiple) {
+      return Object.values(answers[current.id] || {}).some(Boolean);
+    }
+    return Boolean(answers[current.id]);
   };
 
   const handleNext = () => {
+    if (!hasSelection()) {
+      setSelectionError('Please select at least one option before continuing.');
+      return;
+    }
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
       setShowTips(false);
+      setSelectionError('');
     } else {
       setShowResults(true);
     }
   };
 
   const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1);
-      setShowTips(false);
-    }
+    if (currentQuestion === 0) return;
+    setCurrentQuestion((prev) => prev - 1);
+    setShowTips(false);
+    setSelectionError('');
   };
 
-  const calculateResults = () => {
+  const results = useMemo(() => {
+    if (!showResults) return null;
+
     const skinType = answers.skinType;
     const concerns = Object.entries(answers.concerns || {})
-      .filter(([_, selected]) => selected)
+      .filter(([, selected]) => selected)
       .map(([key]) => key);
-    const sensitivity = answers.sensitivity;
-    const lifestyle = answers.lifestyle;
     const environment = answers.environment;
-    const routine = answers.routine;
 
-    let recommendations = [];
-    let dailyRoutine = [];
-    let tips = [];
-    let recommendedProducts = [];
+    const recommendations = [];
+    const dailyRoutine = [];
+    const tips = [];
+    const recommendedProducts = [];
 
-    // Skin type specific recommendations and products
     if (skinType === 'dry') {
-      recommendations.push('Use a gentle, hydrating cleanser');
-      recommendations.push('Apply a rich moisturizer twice daily');
-      recommendations.push('Consider adding a hydrating serum');
-      dailyRoutine.push('Morning: Cleanse, Hydrating Serum, Rich Moisturizer, SPF');
-      dailyRoutine.push('Evening: Cleanse, Hydrating Serum, Rich Moisturizer');
-      tips.push('Avoid hot showers and harsh cleansers');
-      tips.push('Consider using a humidifier in dry environments');
-      recommendedProducts.push({
-        id: 1,
-        name: 'Hydrating Cleanser',
-        price: 24.99,
-        image: '/images/cleanser.jpg',
-        description: 'Gentle cleanser that removes impurities while maintaining skin\'s moisture barrier.',
-      });
-      recommendedProducts.push({
-        id: 3,
-        name: 'Moisturizing Cream',
-        price: 29.99,
-        image: '/images/moisturizer.jpg',
-        description: 'Rich cream that deeply hydrates and nourishes dry skin.',
-      });
+      recommendations.push('Use a gentle hydrating cleanser and a richer barrier-supporting moisturizer.');
+      dailyRoutine.push('Morning: Cleanse, hydrating serum, rich moisturizer, SPF.');
+      dailyRoutine.push('Evening: Cleanse, hydrating serum, nourishing cream.');
+      tips.push('Avoid harsh cleansers and very hot water.');
+      recommendedProducts.push(
+        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: "Removes impurities without stripping the skin's moisture barrier." },
+        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'Deep hydration for dry or tight-feeling skin.' }
+      );
     } else if (skinType === 'oily') {
-      recommendations.push('Use an oil-free, gentle cleanser');
-      recommendations.push('Apply a lightweight, oil-free moisturizer');
-      recommendations.push('Consider using a clay mask weekly');
-      dailyRoutine.push('Morning: Cleanse, Oil-Free Moisturizer, SPF');
-      dailyRoutine.push('Evening: Cleanse, Clay Mask (2-3x weekly), Light Moisturizer');
-      tips.push('Blotting papers can help control shine throughout the day');
-      tips.push('Don\'t skip moisturizer - it helps balance oil production');
-      recommendedProducts.push({
-        id: 1,
-        name: 'Hydrating Cleanser',
-        price: 24.99,
-        image: '/images/cleanser.jpg',
-        description: 'Gentle cleanser that removes impurities while maintaining skin\'s moisture barrier.',
-      });
-      recommendedProducts.push({
-        id: 6,
-        name: 'Clay Mask',
-        price: 27.99,
-        image: '/images/mask.jpg',
-        description: 'Purifying mask that draws out impurities and refines pores.',
-      });
+      recommendations.push('Keep cleansing gentle and use lightweight hydration instead of skipping moisturizer.');
+      dailyRoutine.push('Morning: Cleanse, lightweight moisturizer, SPF.');
+      dailyRoutine.push('Evening: Cleanse, balancing treatment, gel moisturizer.');
+      tips.push('Blot excess oil instead of overwashing.');
+      recommendedProducts.push(
+        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'Balanced cleansing for oily or breakout-prone routines.' },
+        { id: 6, name: 'Clay Mask', price: 27.99, image: productImages.mask, description: 'Weekly pore-refining treatment for shine control.' }
+      );
     } else if (skinType === 'combination') {
-      recommendations.push('Use a balanced cleanser');
-      recommendations.push('Apply different moisturizers to different areas');
-      recommendations.push('Consider using a gentle exfoliant');
-      dailyRoutine.push('Morning: Cleanse, Light Moisturizer (T-zone), Rich Moisturizer (cheeks), SPF');
-      dailyRoutine.push('Evening: Cleanse, Exfoliate (2-3x weekly), Moisturize');
-      tips.push('Use different products for different areas of your face');
-      tips.push('Focus on balancing your skin\'s needs');
+      recommendations.push('Balance hydration so oily and dry areas both feel supported.');
+      dailyRoutine.push('Morning: Cleanse, lightweight serum, targeted moisturizer, SPF.');
+      dailyRoutine.push('Evening: Cleanse, gentle exfoliation 2 to 3 times weekly, moisturizer.');
+      tips.push('Treat the T-zone and cheeks based on what each area needs.');
+      recommendedProducts.push(
+        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'Balanced cleansing for mixed skin needs.' },
+        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'A flexible hydrator that works well for drier areas.' }
+      );
     } else if (skinType === 'sensitive') {
-      recommendations.push('Use fragrance-free, gentle products');
-      recommendations.push('Apply a soothing moisturizer');
-      recommendations.push('Avoid harsh exfoliants');
-      dailyRoutine.push('Morning: Gentle Cleanse, Soothing Serum, Gentle Moisturizer, Mineral SPF');
-      dailyRoutine.push('Evening: Gentle Cleanse, Soothing Serum, Gentle Moisturizer');
-      tips.push('Patch test new products before full application');
-      tips.push('Avoid products with alcohol and fragrances');
+      recommendations.push('Stick with fragrance-free products and a simple routine.');
+      dailyRoutine.push('Morning: Gentle cleanse, soothing serum, moisturizer, mineral SPF.');
+      dailyRoutine.push('Evening: Gentle cleanse, barrier serum, moisturizer.');
+      tips.push('Patch test new products before full use.');
+      recommendedProducts.push(
+        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'A gentle base for easily irritated skin.' },
+        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'Comforting moisture for sensitive routines.' }
+      );
+    } else {
+      recommendations.push('Maintain consistency with a simple cleanse, hydrate, and protect routine.');
+      dailyRoutine.push('Morning: Cleanse, serum, moisturizer, SPF.');
+      dailyRoutine.push('Evening: Cleanse, treatment, moisturizer.');
+      recommendedProducts.push(
+        { id: 2, name: 'Vitamin C Serum', price: 39.99, image: productImages.serum, description: 'Brightening support for a healthy everyday glow.' }
+      );
     }
 
-    // Concern-specific recommendations and products
     if (concerns.includes('acne')) {
-      recommendations.push('Use a salicylic acid cleanser');
-      recommendations.push('Apply a spot treatment as needed');
-      tips.push('Don\'t pick at blemishes - it can cause scarring');
-      tips.push('Change pillowcases regularly to prevent bacteria buildup');
-      recommendedProducts.push({
-        id: 1,
-        name: 'Hydrating Cleanser',
-        price: 24.99,
-        image: '/images/cleanser.jpg',
-        description: 'Gentle cleanser that removes impurities while maintaining skin\'s moisture barrier.',
-      });
+      recommendations.push('Use breakout-friendly ingredients without over-drying your skin.');
+      tips.push('Avoid picking blemishes to reduce post-acne marks.');
     }
     if (concerns.includes('aging')) {
-      recommendations.push('Use a retinol product at night');
-      recommendations.push('Apply a vitamin C serum in the morning');
-      tips.push('Always wear SPF to prevent further aging');
-      tips.push('Stay hydrated and maintain a healthy diet');
-      recommendedProducts.push({
-        id: 2,
-        name: 'Vitamin C Serum',
-        price: 39.99,
-        image: '/images/serum.jpg',
-        description: 'Brightening serum with 20% vitamin C for radiant, even-toned skin.',
-      });
-      recommendedProducts.push({
-        id: 5,
-        name: 'Retinol Night Cream',
-        price: 49.99,
-        image: '/images/retinol.jpg',
-        description: 'Anti-aging cream with encapsulated retinol for gentle yet effective results.',
-      });
+      recommendations.push('Support collagen and brightness with vitamin C and a retinol routine.');
+      tips.push('Consistent SPF is one of the best anti-aging habits.');
+      recommendedProducts.push(
+        { id: 2, name: 'Vitamin C Serum', price: 39.99, image: productImages.serum, description: 'Helps brighten and even skin tone.' },
+        { id: 5, name: 'Retinol Night Cream', price: 49.99, image: productImages.retinol, description: 'Night support for smoother texture and firmer-looking skin.' }
+      );
     }
     if (concerns.includes('darkSpots')) {
-      recommendations.push('Use a brightening serum');
-      recommendations.push('Apply sunscreen daily');
-      tips.push('Be consistent with your brightening routine');
-      tips.push('Protect your skin from sun exposure');
+      recommendations.push('Focus on brightening ingredients and daily sun protection.');
+      tips.push('Tone-evening products work best with consistent, long-term use.');
     }
 
-    // Environment-specific tips
     if (environment === 'dry') {
-      tips.push('Use a humidifier to add moisture to the air');
-      tips.push('Consider using a heavier moisturizer during winter months');
+      tips.push('Use a humidifier or richer moisturizer when the air feels dry.');
     } else if (environment === 'humid') {
-      tips.push('Use lightweight, oil-free products');
-      tips.push('Blot excess oil throughout the day');
+      tips.push('Lightweight textures help skin feel comfortable in humid weather.');
     } else if (environment === 'polluted') {
-      tips.push('Double cleanse in the evening to remove pollutants');
-      tips.push('Use antioxidant-rich products to combat free radicals');
+      tips.push('Double cleansing in the evening can help remove daily buildup.');
     }
 
     return {
@@ -265,251 +244,227 @@ const SkinTest = () => {
       recommendations,
       dailyRoutine,
       tips,
-      recommendedProducts,
+      recommendedProducts: recommendedProducts.filter(
+        (product, index, list) => list.findIndex((item) => item.id === product.id) === index
+      ),
     };
+  }, [answers, showResults]);
+
+  const isSelected = (optionValue) => {
+    if (current.multiple) return answers[current.id]?.[optionValue];
+    return answers[current.id] === optionValue;
   };
 
-  const results = showResults ? calculateResults() : null;
+  const addToCart = (product) => {
+    addItem(product, 1);
+    setShowSuccess(true);
+    window.setTimeout(() => setShowSuccess(false), 2200);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            Skin Care Assessment
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Answer a few questions to get personalized skin care recommendations
+    <div className="page-shell">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 text-center">
+          <h1 className="page-title">Skin care assessment</h1>
+          <p className="page-subtitle mx-auto">
+            Answer a few questions to get tailored routine suggestions, practical skincare tips, and matching product recommendations.
           </p>
         </div>
 
         {!showResults ? (
-          <div className="bg-white py-8 px-4 shadow rounded-lg sm:px-10">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
+          <section className="surface-card p-6 sm:p-8">
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-700">
                   Question {currentQuestion + 1} of {questions.length}
                 </span>
-                <span className="text-sm text-gray-500">
-                  {Math.round(((currentQuestion + 1) / questions.length) * 100)}%
-                </span>
+                <span className="text-slate-500">{progress}% complete</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="h-2.5 rounded-full bg-slate-200">
                 <div
-                  className="bg-pink-600 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${((currentQuestion + 1) / questions.length) * 100}%`,
-                  }}
+                  className="h-2.5 rounded-full bg-pink-600 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
 
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {questions[currentQuestion].question}
-                </h3>
-                <button
-                  onClick={() => setShowTips(!showTips)}
-                  className="text-pink-600 hover:text-pink-700"
-                >
-                  <LightBulbIcon className="h-5 w-5" />
-                </button>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-900">{current.question}</h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  {current.multiple ? 'Choose all options that apply.' : 'Choose one option to continue.'}
+                </p>
               </div>
-
-              {showTips && (
-                <div className="mb-4 p-4 bg-pink-50 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    {questions[currentQuestion].tip}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {questions[currentQuestion].options.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleAnswer(option.value)}
-                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors duration-200 ${
-                      questions[currentQuestion].multiple
-                        ? answers[questions[currentQuestion].id]?.[option.value]
-                          ? 'border-pink-500 bg-pink-50'
-                          : 'border-gray-200 hover:border-pink-300'
-                        : answers[questions[currentQuestion].id] === option.value
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-300'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => setShowTips((prev) => !prev)}
+                className="btn-secondary shrink-0 px-4 py-2.5"
+              >
+                <LightBulbIcon className="mr-2 h-5 w-5" />
+                {showTips ? 'Hide tip' : 'Show tip'}
+              </button>
             </div>
 
-            <div className="flex justify-between">
+            {showTips && (
+              <div className="status-banner status-banner-info mt-6">
+                {current.tip}
+              </div>
+            )}
+
+            <div className="mt-6 grid gap-3">
+              {current.options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleAnswer(option.value)}
+                  className={`rounded-2xl border px-4 py-4 text-left text-sm font-medium transition sm:px-5 ${
+                    isSelected(option.value)
+                      ? 'border-pink-300 bg-pink-50 text-pink-700 shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-pink-200 hover:bg-rose-50/60'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {selectionError && <p className="error-text mt-4">{selectionError}</p>}
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  currentQuestion === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className="btn-secondary disabled:opacity-50"
               >
                 Previous
               </button>
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 rounded-md text-sm font-medium text-white bg-pink-600 hover:bg-pink-700"
-              >
-                {currentQuestion === questions.length - 1 ? 'Get Results' : 'Next'}
+              <button onClick={handleNext} className="btn-primary min-w-[160px]">
+                {currentQuestion === questions.length - 1 ? 'Get results' : 'Next'}
               </button>
             </div>
-          </div>
+          </section>
         ) : (
-          <div className="bg-white py-8 px-4 shadow rounded-lg sm:px-10">
-            <div className="text-center mb-8">
-              <CheckCircleIcon className="mx-auto h-12 w-12 text-pink-500" />
-              <h3 className="mt-2 text-xl font-medium text-gray-900">
-                Your Personalized Skin Care Plan
-              </h3>
+          <section className="surface-card p-6 sm:p-8">
+            <div className="text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-pink-50 text-pink-600">
+                <CheckCircleIcon className="h-8 w-8" />
+              </div>
+              <h2 className="mt-5 text-3xl font-semibold text-slate-900">Your personalized skincare plan</h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                A lightweight routine and product set based on your answers.
+              </p>
             </div>
 
-            <div className="space-y-8">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Skin Type</h4>
-                <p className="mt-1 text-lg text-gray-900 capitalize">
-                  {results.skinType}
-                </p>
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
+              <div className="soft-panel p-5">
+                <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Skin type</p>
+                <p className="mt-3 text-lg font-semibold capitalize text-slate-900">{results.skinType}</p>
               </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">
-                  Main Concerns
-                </h4>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {results.concerns.map((concern) => (
-                    <span
-                      key={concern}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-800"
-                    >
-                      {concern.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                  ))}
+              <div className="soft-panel p-5">
+                <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Main concerns</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {results.concerns.length > 0 ? (
+                    results.concerns.map((concern) => (
+                      <span key={concern} className="badge bg-pink-100 text-pink-700">
+                        {concern.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-500">No concerns selected</span>
+                  )}
                 </div>
               </div>
+            </div>
 
+            <div className="mt-8 grid gap-8 lg:grid-cols-2">
               <div>
-                <h4 className="text-sm font-medium text-gray-500">
-                  Daily Routine
-                </h4>
-                <ul className="mt-2 space-y-2">
-                  {results.dailyRoutine.map((step, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start"
-                    >
-                      <span className="flex-shrink-0 h-5 w-5 text-pink-500">
-                        <SparklesIcon className="h-5 w-5" />
-                      </span>
-                      <span className="ml-2 text-gray-700">{step}</span>
+                <h3 className="text-xl font-semibold text-slate-900">Daily routine</h3>
+                <ul className="mt-4 space-y-3">
+                  {results.dailyRoutine.map((step) => (
+                    <li key={step} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+                      <SparklesIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-pink-500" />
+                      <span className="text-sm leading-6 text-slate-700">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <h3 className="mt-8 text-xl font-semibold text-slate-900">Tips and advice</h3>
+                <ul className="mt-4 space-y-3">
+                  {results.tips.map((tip) => (
+                    <li key={tip} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+                      <ShieldCheckIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-pink-500" />
+                      <span className="text-sm leading-6 text-slate-700">{tip}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-500">
-                  Recommended Products
-                </h4>
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h3 className="text-xl font-semibold text-slate-900">Recommended products</h3>
+                <div className="mt-4 grid gap-4">
                   {results.recommendedProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-white rounded-lg shadow overflow-hidden"
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="p-4">
-                        <h5 className="text-lg font-medium text-gray-900">
-                          {product.name}
-                        </h5>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {product.description}
-                        </p>
-                        <div className="mt-4 flex items-center justify-between">
-                          <span className="text-lg font-medium text-gray-900">
-                            ${product.price.toFixed(2)}
-                          </span>
-                          <button
-                            onClick={() => {
-                              addToCart(product);
-                              setShowSuccess(true);
-                              setTimeout(() => setShowSuccess(false), 3000);
-                            }}
-                            className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-                          >
-                            Add to Cart
-                          </button>
+                    <article key={product.id} className="surface-card overflow-hidden">
+                      <div className="grid gap-4 sm:grid-cols-[132px_1fr]">
+                        <img src={product.image} alt={product.name} className="h-40 w-full object-cover sm:h-full" />
+                        <div className="p-5 sm:pl-0 sm:pr-5">
+                          <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">{product.description}</p>
+                          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="text-lg font-semibold text-slate-900">${product.price.toFixed(2)}</span>
+                            <button onClick={() => addToCart(product)} className="btn-primary">
+                              Add to cart
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
               </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">
-                  Tips & Advice
-                </h4>
-                <ul className="mt-2 space-y-2">
-                  {results.tips.map((tip, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start"
-                    >
-                      <span className="flex-shrink-0 h-5 w-5 text-pink-500">
-                        <ShieldCheckIcon className="h-5 w-5" />
-                      </span>
-                      <span className="ml-2 text-gray-700">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {showSuccess && (
-                <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                  Product added to cart successfully!
-                </div>
-              )}
             </div>
 
-            <div className="mt-8 flex justify-center space-x-4">
-              <button
-                onClick={() => navigate('/products')}
-                className="px-4 py-2 rounded-md text-sm font-medium text-white bg-pink-600 hover:bg-pink-700"
-              >
-                View All Products
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold text-slate-900">Key recommendations</h3>
+              <ul className="mt-4 space-y-3">
+                {results.recommendations.map((recommendation) => (
+                  <li key={recommendation} className="rounded-2xl bg-rose-50 p-4 text-sm leading-6 text-slate-700">
+                    {recommendation}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button onClick={() => navigate('/products')} className="btn-primary">
+                View all products
               </button>
               <button
                 onClick={() => {
                   setCurrentQuestion(0);
                   setAnswers({});
                   setShowResults(false);
+                  setSelectionError('');
                 }}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
+                className="btn-secondary"
               >
-                Retake Test
+                Retake test
               </button>
             </div>
-          </div>
+          </section>
         )}
       </div>
+
+      {showSuccess && (
+        <div className="fixed right-4 top-24 z-50 max-w-sm rounded-2xl border border-emerald-200 bg-white px-4 py-3 shadow-lg shadow-emerald-100">
+          <div className="flex items-start gap-3">
+            <CheckCircleIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Added to cart</p>
+              <p className="mt-1 text-sm text-slate-600">The recommendation was added to your cart.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default SkinTest; 
+export default SkinTest;

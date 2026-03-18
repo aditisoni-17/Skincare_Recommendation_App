@@ -5,12 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "npx vite",
+    "dev:db": "node server/scripts/runMemoryMongo.js",
+    "dev:server": "node server/index.js",
+    "dev:full": "npx concurrently \"npm run dev:server\" \"npm run dev\"",
     "build": "npx vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "seed:test-user": "node server/scripts/createTestUser.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^11.0.1",
+    "mongoose": "^8.19.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0"
@@ -20,6 +31,7 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^9.2.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
