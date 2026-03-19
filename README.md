@@ -67,14 +67,6 @@ Create a local `.env` file from `.env.example`:
 cp .env.example .env
 ```
 
-Example values:
-
-```env
-MONGODB_URI=mongodb://127.0.0.1:27017/noorify
-JWT_SECRET=replace-me
-PORT=5174
-```
-
 ### 4. Start the project
 
 Frontend:
@@ -523,6 +515,4 @@ sequenceDiagram
 - Improve image optimization and asset handling
 - Add deployment documentation for frontend and backend separately
 
-## Author
 
-Aditi Soni
