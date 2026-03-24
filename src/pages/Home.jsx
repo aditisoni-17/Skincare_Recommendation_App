@@ -59,28 +59,11 @@ const Home = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
-  const [productsError, setProductsError] = useState('');
-
   useEffect(() => {
-    let isMounted = true;
-
-    getProducts()
-      .then((data) => {
-        if (!isMounted) return;
-        setFeaturedProducts((data.products || []).slice(0, 4));
-      })
-      .catch((error) => {
-        if (!isMounted) return;
-        setProductsError(error.message || 'Unable to load featured products right now.');
-        setFeaturedProducts([]);
-      })
-      .finally(() => {
-        if (isMounted) setProductsLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    getProducts().then((data) => {
+      setFeaturedProducts((data.products || []).slice(0, 4));
+      setProductsLoading(false);
+    });
   }, []);
 
   const safeFeaturedProducts = useMemo(() => featuredProducts, [featuredProducts]);
@@ -211,8 +194,6 @@ const Home = () => {
             </button>
           </div>
 
-          {productsError && <div className="status-banner status-banner-error mb-6">{productsError}</div>}
-
           {productsLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -230,7 +211,7 @@ const Home = () => {
             <section className="surface-card px-6 py-14 text-center">
               <h3 className="text-xl font-semibold text-slate-900">No featured products yet</h3>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600">
-                Products will appear here automatically once the backend returns available items.
+                Products will appear here automatically when available items are added.
               </p>
             </section>
           ) : (

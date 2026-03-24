@@ -1,6 +1,5 @@
-import { apiFetch } from './apiClient.js';
+import { PRODUCTS } from '../data/products.js';
 
 export async function getProducts() {
-  return apiFetch('/api/products');
+  return { products: PRODUCTS };
 }
-
