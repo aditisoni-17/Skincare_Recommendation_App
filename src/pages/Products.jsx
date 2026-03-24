@@ -11,13 +11,11 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useCart } from '../contexts/CartContext.jsx';
-import { getProducts } from '../services/productService.js';
+import { PRODUCTS } from '../data/products.js';
 
 const Products = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -27,25 +25,7 @@ const Products = () => {
   const { cart, addItem, updateQuantity, totalItems } = useCart();
 
   useEffect(() => {
-    let isMounted = true;
-
-    getProducts()
-      .then((data) => {
-        if (!isMounted) return;
-        setProducts(data.products || []);
-      })
-      .catch((error) => {
-        if (!isMounted) return;
-        setFetchError(error.message || 'Products are temporarily unavailable. Please try again shortly.');
-        setProducts([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    setProducts(PRODUCTS);
   }, []);
 
   const addToCart = (product) => {
@@ -124,8 +104,6 @@ const Products = () => {
           </div>
         </div>
 
-        {fetchError && <div className="status-banner status-banner-error mb-6">{fetchError}</div>}
-
         {showFilters && (
           <section className="surface-card mb-8 p-5 sm:p-6">
             <div className="grid gap-5 md:grid-cols-3">
@@ -184,21 +162,7 @@ const Products = () => {
           </section>
         )}
 
-        {loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="surface-card overflow-hidden">
-                <div className="h-64 animate-pulse bg-slate-200" />
-                <div className="space-y-4 p-6">
-                  <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
-                  <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
-                  <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
-                  <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <section className="surface-card px-6 py-14 text-center">
             <h2 className="text-xl font-semibold text-slate-900">No products found</h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600">
