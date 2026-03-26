@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import authRouter from './routes/auth.js';
 import ordersRouter from './routes/orders.js';
 import productsRouter from './routes/products.js';
+import recommendRouter from './routes/recommend.js';
 import { seedProductsIfEmpty } from './services/seedProducts.js';
 
 dotenv.config();
@@ -26,40 +27,44 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
+app.use('/api/recommend', recommendRouter);
 app.use('/api/orders', ordersRouter);
 
-const PORT = Number(process.env.PORT) || 5174;
+const PORT = Number(process.env.PORT) || 3001;
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/noorify';
+  process.env.MONGO_URI ||
+  process.env.MONGODB_URI ||
+  'mongodb://127.0.0.1:27017/noorify';
 
 async function start() {
   await mongoose.connect(MONGODB_URI, {
     serverSelectionTimeoutMS: 5000,
   });
+
   // eslint-disable-next-line no-console
-  console.log(`API connected to MongoDB`);
+  console.log('API connected to MongoDB');
+
   try {
     const { seeded, count } = await seedProductsIfEmpty();
     // eslint-disable-next-line no-console
     console.log(`Products ready (seeded=${seeded}, count=${count})`);
-  } catch (err) {
+  } catch (error) {
     // eslint-disable-next-line no-console
-    console.warn('Product seeding skipped', err?.message || err);
+    console.warn('Product seeding skipped', error?.message || error);
   }
+
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`API listening on http://localhost:${PORT}`);
   });
 }
 
-start().catch((err) => {
+start().catch((error) => {
   // eslint-disable-next-line no-console
   console.error('Failed to start API', {
-    message: err?.message,
+    message: error?.message,
+    stack: error?.stack,
     mongodbUri: MONGODB_URI,
-    hint:
-      "Start MongoDB locally or run 'npm run dev:db' to launch the in-memory development database.",
-    stack: err?.stack,
   });
   process.exit(1);
 });
