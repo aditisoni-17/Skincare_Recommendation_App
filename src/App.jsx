@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Products from './pages/Products';
+import AdminProducts from './pages/AdminProducts.jsx';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
@@ -26,6 +27,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
