@@ -11,22 +11,86 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useCart } from '../contexts/CartContext.jsx';
-import { PRODUCTS } from '../data/products.js';
+import RecommendationForm from '../components/RecommendationForm.jsx';
+import { getProducts, getRecommendedProducts } from '../services/productService.js';
+
+const PAGE_SIZE = 6;
 
 const Products = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [minRating, setMinRating] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const { cart, addItem, updateQuantity, totalItems } = useCart();
 
+  const cartItemsById = useMemo(() => new Map(cart.map((item) => [item.id, item])), [cart]);
+
   useEffect(() => {
-    setProducts(PRODUCTS);
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        if (!isMounted) return;
+        setProducts(data.products || []);
+        setLoadError(data.error || '');
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setProducts([]);
+        setLoadError('Error loading products. Please try again.');
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!selectedProduct) {
+      setRecommendedProducts([]);
+      setRecommendationsError('');
+      setRecommendationsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setRecommendationsLoading(true);
+    setRecommendationsError('');
+
+    getRecommendedProducts(selectedProduct.id)
+      .then((data) => {
+        if (!isMounted) return;
+        setRecommendedProducts(data.products || []);
+        setRecommendationsError('');
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        console.error('Failed to load recommendations:', error);
+        setRecommendedProducts([]);
+        setRecommendationsError('Unable to load related products right now.');
+      })
+      .finally(() => {
+        if (isMounted) setRecommendationsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProduct]);
 
   const addToCart = (product) => {
     addItem(product, 1);
@@ -34,30 +98,58 @@ const Products = () => {
     window.setTimeout(() => setShowSuccess(false), 2200);
   };
 
-  const filteredProducts = useMemo(
-    () =>
-      products.filter((product) => {
-        if (selectedCategory !== 'all' && product.category !== selectedCategory) {
-          return false;
-        }
-
-        if (priceRange !== 'all') {
-          const [min, max] = priceRange.split('-').map(Number);
-          if (product.price < min || product.price > max) {
-            return false;
-          }
-        }
-
-        if (minRating > 0 && product.rating < minRating) {
-          return false;
-        }
-
-        return true;
-      }),
-    [minRating, priceRange, products, selectedCategory]
+  const categories = useMemo(
+    () => ['all', ...new Set(products.map((product) => product.category).filter(Boolean))],
+    [products]
   );
 
-  const categories = ['all', 'cleansers', 'serums', 'moisturizers', 'sunscreen', 'masks'];
+  const normalizedSearch = useMemo(() => searchTerm.trim().toLowerCase(), [searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [normalizedSearch, selectedCategory, priceRange, minRating]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (selectedCategory !== 'all' && product.category !== selectedCategory) {
+        return false;
+      }
+
+      if (priceRange !== 'all') {
+        const [min, max] = priceRange.split('-').map(Number);
+        if (product.price < min || product.price > max) {
+          return false;
+        }
+      }
+
+      if (minRating > 0 && product.rating < minRating) {
+        return false;
+      }
+
+      if (normalizedSearch) {
+        const matchesName = String(product.name || '').toLowerCase().includes(normalizedSearch);
+        const matchesCategory = String(product.category || '').toLowerCase().includes(normalizedSearch);
+
+        if (!matchesName && !matchesCategory) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [minRating, normalizedSearch, priceRange, products, selectedCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredProducts.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredProducts]);
+
   const priceRanges = [
     { value: 'all', label: 'All prices' },
     { value: '0-25', label: 'Under $25' },
@@ -66,7 +158,6 @@ const Products = () => {
   ];
   const ratings = ['all', '4.5', '4.0', '3.5', '3.0'];
 
-  const productInCart = (id) => cart.find((item) => item.id === id);
   const handleImageError = (event) => {
     event.currentTarget.src = 'https://placehold.co/800x800/fdf2f8/9d174d?text=Noorify';
   };
@@ -103,6 +194,27 @@ const Products = () => {
             </button>
           </div>
         </div>
+
+        {loadError && <div className="status-banner status-banner-error mb-6">{loadError}</div>}
+
+        <RecommendationForm
+          onSelectProduct={setSelectedProduct}
+          onImageError={handleImageError}
+        />
+
+        <section className="surface-card mb-8 p-5 sm:p-6">
+          <label className="field-label" htmlFor="productSearch">
+            Search
+          </label>
+          <input
+            id="productSearch"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or category"
+            className="input-base"
+          />
+        </section>
 
         {showFilters && (
           <section className="surface-card mb-8 p-5 sm:p-6">
@@ -162,27 +274,51 @@ const Products = () => {
           </section>
         )}
 
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <div>
+            <p className="mb-6 text-sm font-medium text-slate-600">Loading products...</p>
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="surface-card overflow-hidden">
+                  <div className="h-64 animate-pulse bg-slate-200" />
+                  <div className="space-y-4 p-6">
+                    <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
+                    <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                    <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
+                    <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <section className="surface-card px-6 py-14 text-center">
-            <h2 className="text-xl font-semibold text-slate-900">No products found</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              {loadError ? 'Error loading products' : 'No products found'}
+            </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600">
-              Try adjusting the category, price range, or rating filters to see more results.
+              {loadError
+                ? 'Please refresh the page or try again in a moment.'
+                : 'Try adjusting the search, category, price range, or rating filters to see more results.'}
             </p>
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setPriceRange('all');
-                setMinRating(0);
-              }}
-              className="btn-secondary mt-6"
-            >
-              Reset filters
-            </button>
+            {!loadError && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('all');
+                  setPriceRange('all');
+                  setMinRating(0);
+                }}
+                className="btn-secondary mt-6"
+              >
+                Reset filters
+              </button>
+            )}
           </section>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((product) => {
-              const cartItem = productInCart(product.id);
+            {paginatedProducts.map((product) => {
+              const cartItem = cartItemsById.get(product.id);
               return (
                 <article key={product.id} className="product-card">
                   <div className="relative">
@@ -267,6 +403,33 @@ const Products = () => {
             })}
           </div>
         )}
+
+        {!loading && filteredProducts.length > PAGE_SIZE && (
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-sm text-slate-600">
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length} products
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                className="btn-secondary"
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="text-sm font-medium text-slate-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                className="btn-secondary"
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedProduct && (
@@ -335,6 +498,39 @@ const Products = () => {
                 </div>
               </div>
             </div>
+
+            <section className="mt-8">
+              <h3 className="text-lg font-semibold text-slate-900">Recommended Products</h3>
+              {recommendationsLoading ? (
+                <p className="mt-3 text-sm text-slate-600">Loading recommendations...</p>
+              ) : recommendationsError ? (
+                <p className="mt-3 text-sm text-rose-600">{recommendationsError}</p>
+              ) : recommendedProducts.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">No recommendations available.</p>
+              ) : (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {recommendedProducts.map((product) => (
+                    <article key={product.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-40 w-full rounded-xl object-cover"
+                        onError={handleImageError}
+                      />
+                      <h4 className="mt-3 text-sm font-semibold text-slate-900">{product.name}</h4>
+                      <p className="mt-1 text-xs text-slate-500">{product.category}</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">${Number(product.price).toFixed(2)}</p>
+                      <button
+                        onClick={() => setSelectedProduct(product)}
+                        className="btn-secondary mt-3 w-full"
+                      >
+                        View details
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         </div>
       )}
