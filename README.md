@@ -1,50 +1,76 @@
 # Noorify
 
-Noorify is a full-stack skincare web application built for a modern e-commerce and personalization workflow. Users can create an account, explore skincare products, take a skin test, get tailored recommendations, manage a cart, and place demo orders through a clean React frontend backed by a Node.js, Express, and MongoDB API.
+Noorify is a full-stack skincare recommendation and e-commerce application built with React, Vite, Express, and MongoDB. It combines a modern product catalog, admin product management, rule-based recommendations, authentication, cart and checkout flows, and a clean API-backed architecture that is easy to demo in interviews.
 
-This project is designed to be portfolio-ready and demonstrates end-to-end product thinking across frontend UI, API integration, authentication, state management, and database-backed user flows.
+## Live Demo
+
+- Frontend: `[Add Vercel URL here]`
+- Backend API: `[Add Render URL here]`
 
 ## Project Overview
 
-Noorify combines a skincare product catalog with basic personalization features:
-
-- users can sign up and log in securely
-- products are loaded from the backend API
-- users can add products to a cart and proceed through checkout
-- profile pages show saved account details and order history
-- skin test and skin analysis flows support recommendation-driven UX
+The project is designed as a beginner-friendly but scalable full-stack app. Users can browse products, search and filter the catalog, view recommendations, manage cart items, and place demo orders. Admin users can create, update, and delete products through an API-connected dashboard.
 
 ## Features
 
-- JWT-based authentication with signup and login
-- Product listing page connected to `/api/products`
-- Cart management with quantity updates and subtotal calculation
-- Demo checkout flow with order creation stored in MongoDB
-- Profile page with order history
-- Skin test and recommendation-driven experience
-- Responsive UI built with Tailwind CSS
-- Scroll-to-top behavior on route change
-- Fallback handling for broken product images
+- Product catalog with search, category filtering, rating filter, and pagination
+- Product detail modal with related product recommendations
+- Rule-based AI-style recommendation flow using skin type and concern inputs
+- Admin panel for product CRUD operations
+- Express REST API with MongoDB and Mongoose
+- Authentication and protected routes
+- Cart, checkout, and order history flows
+- Responsive UI built with React and Tailwind CSS
+- Fallback handling for API and image failures
 
 ## Tech Stack
 
-- Frontend: React, Vite, Tailwind CSS, React Router
-- Backend: Node.js, Express
-- Database: MongoDB, Mongoose
-- Authentication: JWT
-- Tooling: ESLint, PostCSS
+### Frontend
 
-## Installation
+- React 18
+- Vite
+- React Router
+- Tailwind CSS
+- Heroicons
+
+### Backend
+
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- JWT authentication
+
+### Tooling
+
+- ESLint
+- PostCSS
+- Vercel for frontend deployment
+- Render for backend deployment
+
+## Folder Structure
+
+```text
+src/
+  components/
+  contexts/
+  pages/
+  services/
+server/
+  controllers/
+  models/
+  routes/
+  services/
+  utils/
+```
+
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
 - npm
-
-Optional local database choices:
-
-- MongoDB running locally, or
-- the included in-memory development Mongo runner
+- MongoDB locally, or a MongoDB Atlas connection string
 
 ### 1. Clone the repository
 
@@ -61,10 +87,20 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a local `.env` file from `.env.example`:
+Create a `.env` file from `.env.example`:
 
 ```bash
 cp .env.example .env
+```
+
+Example values:
+
+```env
+VITE_API_BASE_URL=http://localhost:3001
+PORT=3001
+MONGO_URI=mongodb://127.0.0.1:27017/noorify
+JWT_SECRET=replace-me
+CORS_ORIGIN=http://localhost:5173
 ```
 
 ### 4. Start the project
@@ -78,441 +114,105 @@ npm run dev
 Backend:
 
 ```bash
-node server/index.js
+npm run dev:server
 ```
 
-If you want a lightweight local Mongo instance for development:
-
-```bash
-npm run dev:db
-```
-
-You can also run frontend and backend together:
+Run both together:
 
 ```bash
 npm run dev:full
 ```
 
-### Local URLs
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:5174`
-
-## Demo Test User
-
-If you want to seed a test account:
+Optional in-memory MongoDB for development:
 
 ```bash
-npm run seed:test-user
+npm run dev:db
 ```
 
-Default credentials:
+## Local URLs
 
-- Email: `test@noorify.com`
-- Password: `123456`
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend: [http://localhost:3001](http://localhost:3001)
+
+## Key Pages
+
+- `/` Home page
+- `/products` Product listing and recommendations
+- `/admin/products` Admin product management
+- `/cart` Cart page
+- `/profile` Profile and order history
+- `/skin-test` Skin assessment flow
+
+## API Endpoints
+
+### Products
+
+- `GET /api/products`
+- `GET /api/products/:id` (add if implemented later)
+- `GET /api/products/recommend/:id`
+- `POST /api/products`
+- `PUT /api/products/:id`
+- `DELETE /api/products/:id`
+
+### Recommendations
+
+- `POST /api/recommend`
+
+Request body:
+
+```json
+{
+  "skinType": "dry",
+  "concern": "dryness"
+}
+```
+
+### Auth and Orders
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/orders`
+- `POST /api/orders`
+
+## Production Deployment
+
+### Frontend on Vercel
+
+1. Import the GitHub repo into Vercel.
+2. Set framework preset to `Vite`.
+3. Add `VITE_API_BASE_URL` pointing to the deployed backend.
+4. Deploy.
+
+### Backend on Render
+
+1. Create a new Web Service from the same repo.
+2. Build command: `npm install`
+3. Start command: `node server/index.js`
+4. Add `PORT`, `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGIN`.
+5. Deploy and verify `/api/health`.
 
 ## Screenshots
 
-Add your screenshots to this section before publishing the project.
+Add screenshots before sharing the repo publicly.
 
-### Home Page
+- `[Home page screenshot]`
+- `[Products page screenshot]`
+- `[Admin dashboard screenshot]`
+- `[Cart and checkout screenshot]`
+- `[Profile / orders screenshot]`
 
-`[Insert homepage screenshot here]`
+## Interview Talking Points
 
-### Products Page
-
-`[Insert products screenshot here]`
-
-### Skin Test / Recommendations
-
-`[Insert skin test screenshot here]`
-
-### Cart / Checkout
-
-`[Insert cart or checkout screenshot here]`
-
-### Profile / Orders
-
-`[Insert profile screenshot here]`
-
-## System Design Diagrams
-
-### Use Case Diagram
-
-This diagram shows the main user interactions supported by Noorify, including authentication, recommendation flows, product browsing, cart management, and checkout.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#FFC0CB",
-    "primaryTextColor": "#3F3F46",
-    "primaryBorderColor": "#FFB6C1",
-    "lineColor": "#87CEFA",
-    "secondaryColor": "#ADD8E6",
-    "tertiaryColor": "#FFF5F7",
-    "background": "#FFFFFF",
-    "mainBkg": "#FFF5F7",
-    "secondBkg": "#F0F9FF",
-    "tertiaryBkg": "#FFF0F5",
-    "actorBkg": "#FFC0CB",
-    "actorBorder": "#FFB6C1",
-    "actorTextColor": "#3F3F46",
-    "actorLineColor": "#87CEFA",
-    "signalColor": "#87CEFA",
-    "signalTextColor": "#3F3F46",
-    "labelBoxBkgColor": "#F0F9FF",
-    "labelBoxBorderColor": "#ADD8E6",
-    "labelTextColor": "#3F3F46",
-    "nodeBorder": "#FFB6C1",
-    "clusterBkg": "#FDF2F8",
-    "clusterBorder": "#ADD8E6",
-    "fontSize": "14px"
-  }
-}}%%
-flowchart LR
-    User((User))
-
-    Signup([Sign Up])
-    Login([Log In])
-    TakeSkinTest([Take Skin Test])
-    ViewRecommendations([View Recommendations])
-    BrowseProducts([Browse Products])
-    ViewProductDetails([View Product Details])
-    ManageCart([Add or Update Cart])
-    Checkout([Checkout])
-    ViewOrders([View Profile and Orders])
-
-    User --> Signup
-    User --> Login
-    User --> TakeSkinTest
-    User --> BrowseProducts
-    User --> ViewProductDetails
-    User --> ManageCart
-    User --> Checkout
-    User --> ViewOrders
-
-    TakeSkinTest --> ViewRecommendations
-    BrowseProducts --> ManageCart
-    ManageCart --> Checkout
-```
-
-### ER Diagram
-
-This diagram represents the core data model behind Noorify. Some parts, such as cart and skin analysis, may be handled partially in frontend state today, but they are shown here as logical product entities in the system design.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#FFC0CB",
-    "primaryTextColor": "#3F3F46",
-    "primaryBorderColor": "#FFB6C1",
-    "lineColor": "#87CEFA",
-    "secondaryColor": "#ADD8E6",
-    "tertiaryColor": "#FFF5F7",
-    "background": "#FFFFFF",
-    "mainBkg": "#FFF5F7",
-    "secondBkg": "#F0F9FF",
-    "tertiaryBkg": "#FFF0F5",
-    "actorBkg": "#FFC0CB",
-    "actorBorder": "#FFB6C1",
-    "actorTextColor": "#3F3F46",
-    "actorLineColor": "#87CEFA",
-    "signalColor": "#87CEFA",
-    "signalTextColor": "#3F3F46",
-    "labelBoxBkgColor": "#F0F9FF",
-    "labelBoxBorderColor": "#ADD8E6",
-    "labelTextColor": "#3F3F46",
-    "nodeBorder": "#FFB6C1",
-    "clusterBkg": "#FDF2F8",
-    "clusterBorder": "#ADD8E6",
-    "fontSize": "14px"
-  }
-}}%%
-erDiagram
-    USER {
-        string id
-        string name
-        string email
-        string phone
-        string passwordHash
-        string skinType
-        string skinConcerns
-        string allergies
-    }
-
-    PRODUCT {
-        int id
-        string name
-        float price
-        float rating
-        int reviewCount
-        string image
-        string description
-        string category
-        boolean isNew
-        boolean isSale
-    }
-
-    CART {
-        string id
-        string userId
-        float subtotal
-    }
-
-    CART_ITEM {
-        string id
-        string cartId
-        int productId
-        int quantity
-    }
-
-    ORDER {
-        string id
-        string userId
-        float total
-        string status
-        date createdAt
-    }
-
-    SKIN_ANALYSIS {
-        string id
-        string userId
-        string skinType
-        string concerns
-        string recommendations
-        date createdAt
-    }
-
-    USER ||--o{ ORDER : places
-    USER ||--o| CART : owns
-    USER ||--o{ SKIN_ANALYSIS : receives
-    CART ||--o{ CART_ITEM : contains
-    PRODUCT ||--o{ CART_ITEM : appears_in
-```
-
-### Class Diagram
-
-This class diagram highlights the main frontend and backend building blocks used in Noorify, including UI pages, shared services, API routes, and persistence models.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#FFC0CB",
-    "primaryTextColor": "#3F3F46",
-    "primaryBorderColor": "#FFB6C1",
-    "lineColor": "#87CEFA",
-    "secondaryColor": "#ADD8E6",
-    "tertiaryColor": "#FFF5F7",
-    "background": "#FFFFFF",
-    "mainBkg": "#FFF5F7",
-    "secondBkg": "#F0F9FF",
-    "tertiaryBkg": "#FFF0F5",
-    "actorBkg": "#FFC0CB",
-    "actorBorder": "#FFB6C1",
-    "actorTextColor": "#3F3F46",
-    "actorLineColor": "#87CEFA",
-    "signalColor": "#87CEFA",
-    "signalTextColor": "#3F3F46",
-    "labelBoxBkgColor": "#F0F9FF",
-    "labelBoxBorderColor": "#ADD8E6",
-    "labelTextColor": "#3F3F46",
-    "nodeBorder": "#FFB6C1",
-    "clusterBkg": "#FDF2F8",
-    "clusterBorder": "#ADD8E6",
-    "fontSize": "14px"
-  }
-}}%%
-classDiagram
-    class App {
-      +renderRoutes()
-    }
-
-    class Home
-    class ProductsPage {
-      +loadProducts()
-      +renderProductCards()
-    }
-    class LoginPage {
-      +submitLogin()
-    }
-    class SignupPage {
-      +submitSignup()
-    }
-    class CartPage
-    class CheckoutPage {
-      +submitOrder()
-    }
-    class SkinTestPage {
-      +calculateRecommendations()
-    }
-
-    class AuthContext {
-      +user
-      +token
-      +setUser()
-      +setToken()
-      +logout()
-    }
-
-    class CartContext {
-      +cart
-      +addItem()
-      +removeItem()
-      +updateQuantity()
-      +clearCart()
-    }
-
-    class ApiClient {
-      +apiFetch()
-    }
-
-    class AuthService {
-      +signup()
-      +login()
-    }
-
-    class ProductService {
-      +getProducts()
-    }
-
-    class OrderService {
-      +createOrder()
-      +getOrders()
-    }
-
-    class AuthRoute
-    class ProductRoute
-    class OrderRoute
-
-    class UserModel
-    class ProductModel
-    class OrderModel
-
-    App --> Home
-    App --> ProductsPage
-    App --> LoginPage
-    App --> SignupPage
-    App --> CartPage
-    App --> CheckoutPage
-    App --> SkinTestPage
-
-    LoginPage --> AuthService
-    SignupPage --> AuthService
-    ProductsPage --> ProductService
-    CheckoutPage --> OrderService
-    SkinTestPage --> CartContext
-
-    AuthService --> ApiClient
-    ProductService --> ApiClient
-    OrderService --> ApiClient
-
-    AuthContext --> AuthService
-    CartContext --> ProductsPage
-    CartContext --> CartPage
-    CartContext --> CheckoutPage
-
-    AuthRoute --> UserModel
-    ProductRoute --> ProductModel
-    OrderRoute --> OrderModel
-```
-
-### Sequence Diagram
-
-This sequence diagram shows a key Noorify flow: a user logs in from the React frontend, the API validates credentials, MongoDB returns the user record, and the app stores auth state before redirecting.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#FFC0CB",
-    "primaryTextColor": "#3F3F46",
-    "primaryBorderColor": "#FFB6C1",
-    "lineColor": "#87CEFA",
-    "secondaryColor": "#ADD8E6",
-    "tertiaryColor": "#FFF5F7",
-    "background": "#FFFFFF",
-    "mainBkg": "#FFF5F7",
-    "secondBkg": "#F0F9FF",
-    "tertiaryBkg": "#FFF0F5",
-    "actorBkg": "#FFC0CB",
-    "actorBorder": "#FFB6C1",
-    "actorTextColor": "#3F3F46",
-    "actorLineColor": "#87CEFA",
-    "signalColor": "#87CEFA",
-    "signalTextColor": "#3F3F46",
-    "labelBoxBkgColor": "#F0F9FF",
-    "labelBoxBorderColor": "#ADD8E6",
-    "labelTextColor": "#3F3F46",
-    "nodeBorder": "#FFB6C1",
-    "clusterBkg": "#FDF2F8",
-    "clusterBorder": "#ADD8E6",
-    "fontSize": "14px"
-  }
-}}%%
-sequenceDiagram
-    actor User
-    participant LoginPage as React Login Page
-    participant AuthService as Auth Service
-    participant API as Express API
-    participant DB as MongoDB
-    participant AuthContext as Auth Context
-
-    User->>LoginPage: Enter email and password
-    LoginPage->>AuthService: login(credentials)
-    AuthService->>API: POST /api/auth/login
-    API->>DB: Find user by email
-    DB-->>API: User record
-    API->>API: Compare password and create JWT
-    API-->>AuthService: token + user
-    AuthService-->>LoginPage: auth response
-    LoginPage->>AuthContext: setUser(user), setToken(token)
-    LoginPage-->>User: Redirect to homepage
-```
-
-## Project Structure
-
-```bash
-.
-├── public/
-├── server/
-│   ├── lib/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── scripts/
-│   └── services/
-├── src/
-│   ├── components/
-│   ├── contexts/
-│   ├── pages/
-│   ├── services/
-│   └── utils/
-├── .env.example
-├── package.json
-└── README.md
-```
-
-## Available Scripts
-
-- `npm run dev` - start the frontend dev server
-- `npm run dev:server` - start the Express backend
-- `npm run dev:db` - start the in-memory MongoDB dev instance
-- `npm run dev:full` - run frontend and backend together
-- `npm run build` - create a production frontend build
-- `npm run preview` - preview the built frontend
-- `npm run seed:test-user` - create or update the local test user
+- Full-stack CRUD architecture with React, Express, and MongoDB
+- Environment-based frontend/backend deployment setup
+- API fallback strategy and frontend error handling
+- Rule-based recommendation system designed to be ML-upgradeable later
+- Separation of concerns across routes, controllers, services, and UI components
 
 ## Future Improvements
 
-- Replace demo checkout with real payment integration
-- Add admin product management UI
-- Expand recommendation logic with richer user profiling
-- Add product search and advanced filtering
-- Add testing coverage for frontend and backend flows
-- Improve image optimization and asset handling
-- Add deployment documentation for frontend and backend separately
-
-
+- Server-side pagination and sorting controls in the UI
+- Role-based admin access control
+- Cloud image storage instead of third-party hotlinked image URLs
+- Unit and integration tests for controllers and pages
+- Smarter recommendation ranking using embeddings or user history
