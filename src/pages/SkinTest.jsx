@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircleIcon,
@@ -7,19 +7,25 @@ import {
   LightBulbIcon,
 } from '@heroicons/react/24/outline';
 import { useCart } from '../contexts/CartContext.jsx';
+import { PRODUCTS } from '../data/products.js';
 
-const productImages = {
-  cleanser:
-    'https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?auto=format&fit=crop&w=1200&q=80',
-  serum:
-    'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=1200&q=80',
-  moisturizer:
-    'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80',
-  mask:
-    'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80',
-  retinol:
-    'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1200&q=80',
-};
+const productsById = new Map(PRODUCTS.map((product) => [product.id, product]));
+
+function getRecommendedProduct(id, fallbackDescription) {
+  const product = productsById.get(id);
+
+  if (!product) {
+    return null;
+  }
+
+  return {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    image: product.image,
+    description: fallbackDescription || product.description,
+  };
+}
 
 const questions = [
   {
@@ -104,6 +110,7 @@ const SkinTest = () => {
   const [showTips, setShowTips] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectionError, setSelectionError] = useState('');
+  const successTimeoutRef = useRef(null);
 
   const current = questions[currentQuestion];
   const progress = Math.round(((currentQuestion + 1) / questions.length) * 100);
@@ -174,8 +181,8 @@ const SkinTest = () => {
       dailyRoutine.push('Evening: Cleanse, hydrating serum, nourishing cream.');
       tips.push('Avoid harsh cleansers and very hot water.');
       recommendedProducts.push(
-        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: "Removes impurities without stripping the skin's moisture barrier." },
-        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'Deep hydration for dry or tight-feeling skin.' }
+        getRecommendedProduct(1, "Removes impurities without stripping the skin's moisture barrier."),
+        getRecommendedProduct(3, 'Deep hydration for dry or tight-feeling skin.')
       );
     } else if (skinType === 'oily') {
       recommendations.push('Keep cleansing gentle and use lightweight hydration instead of skipping moisturizer.');
@@ -183,8 +190,8 @@ const SkinTest = () => {
       dailyRoutine.push('Evening: Cleanse, balancing treatment, gel moisturizer.');
       tips.push('Blot excess oil instead of overwashing.');
       recommendedProducts.push(
-        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'Balanced cleansing for oily or breakout-prone routines.' },
-        { id: 6, name: 'Clay Mask', price: 27.99, image: productImages.mask, description: 'Weekly pore-refining treatment for shine control.' }
+        getRecommendedProduct(1, 'Balanced cleansing for oily or breakout-prone routines.'),
+        getRecommendedProduct(6, 'Weekly pore-refining treatment for shine control.')
       );
     } else if (skinType === 'combination') {
       recommendations.push('Balance hydration so oily and dry areas both feel supported.');
@@ -192,8 +199,8 @@ const SkinTest = () => {
       dailyRoutine.push('Evening: Cleanse, gentle exfoliation 2 to 3 times weekly, moisturizer.');
       tips.push('Treat the T-zone and cheeks based on what each area needs.');
       recommendedProducts.push(
-        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'Balanced cleansing for mixed skin needs.' },
-        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'A flexible hydrator that works well for drier areas.' }
+        getRecommendedProduct(1, 'Balanced cleansing for mixed skin needs.'),
+        getRecommendedProduct(3, 'A flexible hydrator that works well for drier areas.')
       );
     } else if (skinType === 'sensitive') {
       recommendations.push('Stick with fragrance-free products and a simple routine.');
@@ -201,15 +208,15 @@ const SkinTest = () => {
       dailyRoutine.push('Evening: Gentle cleanse, barrier serum, moisturizer.');
       tips.push('Patch test new products before full use.');
       recommendedProducts.push(
-        { id: 1, name: 'Hydrating Cleanser', price: 24.99, image: productImages.cleanser, description: 'A gentle base for easily irritated skin.' },
-        { id: 3, name: 'Moisturizing Cream', price: 29.99, image: productImages.moisturizer, description: 'Comforting moisture for sensitive routines.' }
+        getRecommendedProduct(1, 'A gentle base for easily irritated skin.'),
+        getRecommendedProduct(3, 'Comforting moisture for sensitive routines.')
       );
     } else {
       recommendations.push('Maintain consistency with a simple cleanse, hydrate, and protect routine.');
       dailyRoutine.push('Morning: Cleanse, serum, moisturizer, SPF.');
       dailyRoutine.push('Evening: Cleanse, treatment, moisturizer.');
       recommendedProducts.push(
-        { id: 2, name: 'Vitamin C Serum', price: 39.99, image: productImages.serum, description: 'Brightening support for a healthy everyday glow.' }
+        getRecommendedProduct(2, 'Brightening support for a healthy everyday glow.')
       );
     }
 
@@ -221,8 +228,8 @@ const SkinTest = () => {
       recommendations.push('Support collagen and brightness with vitamin C and a retinol routine.');
       tips.push('Consistent SPF is one of the best anti-aging habits.');
       recommendedProducts.push(
-        { id: 2, name: 'Vitamin C Serum', price: 39.99, image: productImages.serum, description: 'Helps brighten and even skin tone.' },
-        { id: 5, name: 'Retinol Night Cream', price: 49.99, image: productImages.retinol, description: 'Night support for smoother texture and firmer-looking skin.' }
+        getRecommendedProduct(2, 'Helps brighten and even skin tone.'),
+        getRecommendedProduct(5, 'Night support for smoother texture and firmer-looking skin.')
       );
     }
     if (concerns.includes('darkSpots')) {
@@ -245,7 +252,8 @@ const SkinTest = () => {
       dailyRoutine,
       tips,
       recommendedProducts: recommendedProducts.filter(
-        (product, index, list) => list.findIndex((item) => item.id === product.id) === index
+        (product, index, list) =>
+          product && list.findIndex((item) => item?.id === product.id) === index
       ),
     };
   }, [answers, showResults]);
@@ -258,8 +266,15 @@ const SkinTest = () => {
   const addToCart = (product) => {
     addItem(product, 1);
     setShowSuccess(true);
-    window.setTimeout(() => setShowSuccess(false), 2200);
+    window.clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = window.setTimeout(() => setShowSuccess(false), 2200);
   };
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(successTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <div className="page-shell">
