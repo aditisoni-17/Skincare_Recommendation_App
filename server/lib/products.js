@@ -1,1 +1,1 @@
-export { PRODUCTS } from '../../src/services/productService.js';
+export { PRODUCTS } from '../../src/data/products.js';
