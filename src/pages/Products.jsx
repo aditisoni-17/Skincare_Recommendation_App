@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShoppingCartIcon,
@@ -10,7 +10,9 @@ import {
   MinusIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useCart } from '../contexts/CartContext.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import RecommendationForm from '../components/RecommendationForm.jsx';
 import { getProducts, getRecommendedProducts } from '../services/productService.js';
 
@@ -21,6 +23,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [favoriteMessage, setFavoriteMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -32,9 +35,16 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState('all');
   const [minRating, setMinRating] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const successTimeoutRef = useRef(null);
+  const favoriteTimeoutRef = useRef(null);
   const { cart, addItem, updateQuantity, totalItems } = useCart();
+  const { user, toggleFavorite } = useAuth();
 
   const cartItemsById = useMemo(() => new Map(cart.map((item) => [item.id, item])), [cart]);
+  const favoriteIds = useMemo(
+    () => new Set((user?.favorites || []).map((item) => item.id)),
+    [user]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -95,7 +105,28 @@ const Products = () => {
   const addToCart = (product) => {
     addItem(product, 1);
     setShowSuccess(true);
-    window.setTimeout(() => setShowSuccess(false), 2200);
+    window.clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = window.setTimeout(() => setShowSuccess(false), 2200);
+  };
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(successTimeoutRef.current);
+      window.clearTimeout(favoriteTimeoutRef.current);
+    };
+  }, []);
+
+  const showFavoriteMessage = (message) => {
+    setFavoriteMessage(message);
+    window.clearTimeout(favoriteTimeoutRef.current);
+    favoriteTimeoutRef.current = window.setTimeout(() => setFavoriteMessage(''), 2200);
+  };
+
+  const handleFavoriteToggle = (product) => {
+    const isAdded = toggleFavorite(product);
+    showFavoriteMessage(
+      isAdded ? `${product.name} saved to favorites.` : `${product.name} removed from favorites.`
+    );
   };
 
   const categories = useMemo(
@@ -196,6 +227,7 @@ const Products = () => {
         </div>
 
         {loadError && <div className="status-banner status-banner-error mb-6">{loadError}</div>}
+        {favoriteMessage && <div className="status-banner mb-6">{favoriteMessage}</div>}
 
         <RecommendationForm
           onSelectProduct={setSelectedProduct}
@@ -319,6 +351,7 @@ const Products = () => {
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {paginatedProducts.map((product) => {
               const cartItem = cartItemsById.get(product.id);
+              const isFavorite = favoriteIds.has(product.id);
               return (
                 <article key={product.id} className="product-card">
                   <div className="relative">
@@ -327,6 +360,7 @@ const Products = () => {
                       alt={product.name}
                       className="h-64 w-full object-cover"
                       onError={handleImageError}
+                      onClick={() => setSelectedProduct(product)}
                     />
                     <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
                       <div className="flex gap-2">
@@ -334,11 +368,11 @@ const Products = () => {
                         {product.isSale && <span className="badge bg-rose-600 text-white">Sale</span>}
                       </div>
                       <button
-                        onClick={() => setSelectedProduct(product)}
+                        onClick={() => handleFavoriteToggle(product)}
                         className="rounded-full bg-white/90 p-2 text-slate-500 shadow-sm transition hover:text-pink-600"
-                        aria-label={`View ${product.name} details`}
+                        aria-label={isFavorite ? `Remove ${product.name} from favorites` : `Save ${product.name} to favorites`}
                       >
-                        <HeartIcon className="h-5 w-5" />
+                        {isFavorite ? <HeartSolidIcon className="h-5 w-5 text-pink-600" /> : <HeartIcon className="h-5 w-5" />}
                       </button>
                     </div>
                   </div>
@@ -392,9 +426,14 @@ const Products = () => {
                           </div>
                         </div>
                       ) : (
-                        <button onClick={() => addToCart(product)} className="btn-primary w-full">
-                          Add to cart
-                        </button>
+                        <div className="space-y-3">
+                          <button onClick={() => addToCart(product)} className="btn-primary w-full">
+                            Add to cart
+                          </button>
+                          <button onClick={() => setSelectedProduct(product)} className="btn-secondary w-full">
+                            View details
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -488,6 +527,12 @@ const Products = () => {
                     className="btn-primary w-full"
                   >
                     Add to cart
+                  </button>
+                  <button
+                    onClick={() => handleFavoriteToggle(selectedProduct)}
+                    className="btn-secondary w-full"
+                  >
+                    {favoriteIds.has(selectedProduct.id) ? 'Remove from favorites' : 'Save to favorites'}
                   </button>
                   <button
                     onClick={() => navigate('/cart')}
