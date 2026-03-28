@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 const CartContext = createContext(null);
 
@@ -13,7 +20,11 @@ function readCartFromStorage() {
 }
 
 function writeCartToStorage(cart) {
-  localStorage.setItem('cart', JSON.stringify(cart));
+  try {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  } catch {
+    // ignore storage write errors so cart updates still work in memory
+  }
 }
 
 export function CartProvider({ children }) {
@@ -23,7 +34,7 @@ export function CartProvider({ children }) {
     writeCartToStorage(cart);
   }, [cart]);
 
-  const addItem = (product, qty = 1) => {
+  const addItem = useCallback((product, qty = 1) => {
     if (!product?.id) return;
     const quantity = Number.isFinite(qty) ? qty : 1;
     if (quantity <= 0) return;
@@ -39,13 +50,13 @@ export function CartProvider({ children }) {
       }
       return [...prev, { ...product, quantity }];
     });
-  };
+  }, []);
 
-  const removeItem = (productId) => {
+  const removeItem = useCallback((productId) => {
     setCart((prev) => prev.filter((i) => i.id !== productId));
-  };
+  }, []);
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = useCallback((productId, newQuantity) => {
     const q = Number(newQuantity);
     if (!Number.isFinite(q)) return;
     if (q <= 0) {
@@ -55,9 +66,9 @@ export function CartProvider({ children }) {
     setCart((prev) =>
       prev.map((i) => (i.id === productId ? { ...i, quantity: q } : i))
     );
-  };
+  }, [removeItem]);
 
-  const clearCart = () => setCart([]);
+  const clearCart = useCallback(() => setCart([]), []);
 
   const subtotal = useMemo(() => {
     return cart.reduce((sum, item) => {
@@ -81,7 +92,7 @@ export function CartProvider({ children }) {
       subtotal,
       totalItems,
     }),
-    [cart, subtotal, totalItems]
+    [addItem, cart, clearCart, removeItem, subtotal, totalItems, updateQuantity]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -92,4 +103,3 @@ export function useCart() {
   if (!ctx) throw new Error('useCart must be used within CartProvider');
   return ctx;
 }
-

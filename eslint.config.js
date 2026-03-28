@@ -31,6 +31,12 @@ export default [
     },
   },
   {
+    files: ['src/contexts/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     files: ['server/**/*.js', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 2020,

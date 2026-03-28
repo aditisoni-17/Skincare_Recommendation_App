@@ -7,6 +7,15 @@ import {
   ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 
+function readUserFromStorage() {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 const SkinAnalysis = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -15,17 +24,29 @@ const SkinAnalysis = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const storedUser = readUserFromStorage();
+    if (!storedUser) {
       navigate('/login');
       return;
     }
-    setUser(JSON.parse(userData));
+    setUser(storedUser);
   }, [navigate]);
 
+  useEffect(() => {
+    return () => {
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage);
+      }
+    };
+  }, [selectedImage]);
+
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage);
+      }
+
       setSelectedImage(URL.createObjectURL(file));
       // In a real app, you would upload this to your backend for analysis
       setLoading(true);
@@ -61,6 +82,9 @@ const SkinAnalysis = () => {
   };
 
   const handleRetake = () => {
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage);
+    }
     setSelectedImage(null);
     setAnalysis(null);
   };

@@ -11,7 +11,11 @@ function readUsers() {
 }
 
 function writeUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  } catch {
+    throw new Error('Unable to save account data right now.');
+  }
 }
 
 function normalizeEmail(email = '') {

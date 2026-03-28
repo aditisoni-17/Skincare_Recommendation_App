@@ -41,26 +41,21 @@ async function start() {
     serverSelectionTimeoutMS: 5000,
   });
 
-  // eslint-disable-next-line no-console
   console.log('API connected to MongoDB');
 
   try {
     const { seeded, count } = await seedProductsIfEmpty();
-    // eslint-disable-next-line no-console
     console.log(`Products ready (seeded=${seeded}, count=${count})`);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.warn('Product seeding skipped', error?.message || error);
   }
 
   app.listen(PORT, () => {
-    // eslint-disable-next-line no-console
     console.log(`API listening on http://localhost:${PORT}`);
   });
 }
 
 start().catch((error) => {
-  // eslint-disable-next-line no-console
   console.error('Failed to start API', {
     message: error?.message,
     stack: error?.stack,

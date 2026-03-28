@@ -4,8 +4,16 @@ import {
   SunIcon,
   MoonIcon,
   SparklesIcon,
-  FaceSmileIcon,
 } from '@heroicons/react/24/outline';
+
+function readUserFromStorage() {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 const SkinCareRoutine = () => {
   const navigate = useNavigate();
@@ -13,12 +21,12 @@ const SkinCareRoutine = () => {
   const [activeTab, setActiveTab] = useState('morning');
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const storedUser = readUserFromStorage();
+    if (!storedUser) {
       navigate('/login');
       return;
     }
-    setUser(JSON.parse(userData));
+    setUser(storedUser);
   }, [navigate]);
 
   const routines = {

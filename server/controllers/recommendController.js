@@ -126,7 +126,6 @@ export async function recommendProducts(req, res) {
       profile: { skinType, concern },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Recommendation API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }

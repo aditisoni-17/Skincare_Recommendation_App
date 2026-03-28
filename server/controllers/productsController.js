@@ -124,7 +124,6 @@ function handleDatabaseError(res, error) {
     return res.status(409).json({ error: 'Product with this id already exists' });
   }
 
-  // eslint-disable-next-line no-console
   console.error('Products API error:', error);
   return res.status(500).json({ error: 'Internal server error' });
 }

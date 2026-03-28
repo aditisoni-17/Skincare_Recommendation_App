@@ -104,7 +104,6 @@ router.post('/signup', async (req, res) => {
       user: serializeUser(user),
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Signup failed:', err);
 
     if (err?.code === 11000) {
@@ -141,7 +140,6 @@ router.post('/login', async (req, res) => {
       user: serializeUser(user),
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Login failed:', err);
     return res.status(500).json({ error: 'Unable to sign in right now.' });
   }

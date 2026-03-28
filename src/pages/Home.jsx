@@ -1,4 +1,4 @@
-import { createElement, useEffect, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   SparklesIcon,
@@ -59,11 +59,25 @@ const Home = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const successTimeoutRef = useRef(null);
+
   useEffect(() => {
-    getProducts().then((data) => {
-      setFeaturedProducts((data.products || []).slice(0, 4));
-      setProductsLoading(false);
-    });
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        if (!isMounted) return;
+        setFeaturedProducts((data.products || []).slice(0, 4));
+      })
+      .finally(() => {
+        if (isMounted) {
+          setProductsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const safeFeaturedProducts = useMemo(() => featuredProducts, [featuredProducts]);
@@ -71,8 +85,15 @@ const Home = () => {
   const handleAddToCart = (product) => {
     addItem(product, 1);
     setShowSuccess(true);
-    window.setTimeout(() => setShowSuccess(false), 2200);
+    window.clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = window.setTimeout(() => setShowSuccess(false), 2200);
   };
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(successTimeoutRef.current);
+    };
+  }, []);
 
   const handleImageError = (event) => {
     event.currentTarget.src = 'https://placehold.co/800x800/fdf2f8/9d174d?text=Noorify';

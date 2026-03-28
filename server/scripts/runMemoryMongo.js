@@ -18,7 +18,6 @@ async function start() {
 
   const uri = mongoServer.getUri(DB_NAME);
 
-  // eslint-disable-next-line no-console
   console.log('In-memory MongoDB ready', {
     uri,
     note: 'Keep this process running while using the app locally.',
@@ -30,13 +29,11 @@ async function shutdown(signal) {
     await mongoServer.stop();
   }
 
-  // eslint-disable-next-line no-console
   console.log(`In-memory MongoDB stopped (${signal})`);
   process.exit(0);
 }
 
 start().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('Failed to start in-memory MongoDB', {
     message: err?.message,
     stack: err?.stack,

@@ -42,7 +42,6 @@ async function run() {
     }
   );
 
-  // eslint-disable-next-line no-console
   console.log('Test user ready:', {
     id: user._id.toString(),
     email: user.email,
@@ -52,7 +51,6 @@ async function run() {
 
 run()
   .catch((err) => {
-    // eslint-disable-next-line no-console
     console.error('Failed to create test user:', {
       message: err?.message,
       mongodbUri: MONGODB_URI,
