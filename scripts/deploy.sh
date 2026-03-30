@@ -1,17 +1,17 @@
 #!/bin/bash
 
-echo "🚀 Starting Noorify deployment..."
+echo " Starting Noorify deployment..."
 
 # Install dependencies
-echo "📦 Installing dependencies..."
+echo " Installing dependencies..."
 npm install
 
 # Build project
-echo "🏗️ Building project..."
+echo " Building project..."
 npm run build
 
 # Run tests (optional)
-echo "🧪 Running tests..."
+echo " Running tests..."
 npm test || exit 1
 
-echo "✅ Deployment script completed!"
+echo " Deployment script completed!"
