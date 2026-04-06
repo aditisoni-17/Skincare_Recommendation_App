@@ -303,7 +303,9 @@ const Home = () => {
                     <StarIcon key={star} className="h-5 w-5" />
                   ))}
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-600">"{testimonial.content}"</p>
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  &quot;{testimonial.content}&quot;
+                </p>
                 <div className="mt-6">
                   <p className="font-semibold text-slate-900">{testimonial.name}</p>
                   <p className="text-sm text-slate-500">{testimonial.role}</p>

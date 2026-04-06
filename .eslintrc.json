@@ -1,0 +1,94 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    ".vercel/",
+    "coverage/"
+  ],
+  "env": {
+    "es2022": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.{js,jsx}"],
+      "env": {
+        "browser": true
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:react-hooks/recommended",
+        "prettier"
+      ],
+      "plugins": ["react", "react-hooks", "react-refresh"],
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "ecmaFeatures": {
+          "jsx": true
+        }
+      },
+      "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react/prop-types": "off",
+        "react-refresh/only-export-components": [
+          "warn",
+          {
+            "allowConstantExport": true
+          }
+        ],
+        "no-unused-vars": [
+          "error",
+          {
+            "varsIgnorePattern": "^[A-Z_]",
+            "argsIgnorePattern": "^_"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/contexts/**/*.{js,jsx}"],
+      "rules": {
+        "react-refresh/only-export-components": "off"
+      }
+    },
+    {
+      "files": ["server/**/*.js", "*.config.js", "*.config.cjs"],
+      "env": {
+        "node": true
+      },
+      "extends": ["eslint:recommended", "prettier"],
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+      },
+      "rules": {
+        "no-unused-vars": [
+          "error",
+          {
+            "varsIgnorePattern": "^[A-Z_]",
+            "argsIgnorePattern": "^_"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "node": true,
+        "jest": true
+      },
+      "extends": ["eslint:recommended", "prettier"],
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+      }
+    }
+  ]
+}
