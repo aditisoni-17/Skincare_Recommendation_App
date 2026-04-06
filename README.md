@@ -1,27 +1,36 @@
 # Noorify
 
-Noorify is a full-stack skincare recommendation and e-commerce application built with React, Vite, Express, and MongoDB. It combines a modern product catalog, admin product management, rule-based recommendations, authentication, cart and checkout flows, and a clean API-backed architecture that is easy to demo in interviews.
+Noorify is a full-stack skincare recommendation and commerce application built with React, Node.js, Express, and MongoDB. It combines a modern product discovery experience with authentication, cart and checkout flows, admin product management, and rule-based skincare recommendations.
 
-## Live Demo
+The project is designed to demonstrate strong full-stack engineering fundamentals: modular architecture, API-driven UI flows, CI/CD automation, production deployment, automated testing, and a clean developer experience.
 
-- Frontend: `[Add Vercel URL here]`
-- Backend API: `[Add Render URL here]`
+## Live Application
+
+- Frontend: [https://noorify-20260402-1.vercel.app](https://noorify-20260402-1.vercel.app)
+- Backend: Deployable through the included EC2 workflow
 
 ## Project Overview
 
-The project is designed as a beginner-friendly but scalable full-stack app. Users can browse products, search and filter the catalog, view recommendations, manage cart items, and place demo orders. Admin users can create, update, and delete products through an API-connected dashboard.
+Noorify helps users explore skincare products, get tailored recommendations based on their skin profile, and move through a complete shopping flow from discovery to order confirmation. On the administrative side, it supports product CRUD operations through a dedicated management interface.
 
-## Features
+This project was built to showcase:
 
-- Product catalog with search, category filtering, rating filter, and pagination
-- Product detail modal with related product recommendations
-- Rule-based AI-style recommendation flow using skin type and concern inputs
-- Admin panel for product CRUD operations
-- Express REST API with MongoDB and Mongoose
-- Authentication and protected routes
+- End-to-end full-stack development with a React frontend and Express API
+- Clean separation between UI, state management, business logic, and persistence
+- Production-minded engineering practices including linting, formatting, testing, CI, and automated deployment
+- A polished user experience backed by a maintainable codebase
+
+## Core Features
+
+- Product catalog with filtering, pagination, and recommendation-driven discovery
+- Product detail modal with related product suggestions
+- Rule-based skincare recommendation flow based on skin type and concerns
+- Authentication with protected routes
 - Cart, checkout, and order history flows
-- Responsive UI built with React and Tailwind CSS
-- Fallback handling for API and image failures
+- Favorites / wishlist support
+- Editable skin profile management
+- Admin product management for create, update, and delete operations
+- Fallback behavior for product loading and image failures
 
 ## Tech Stack
 
@@ -32,6 +41,7 @@ The project is designed as a beginner-friendly but scalable full-stack app. User
 - React Router
 - Tailwind CSS
 - Heroicons
+- Context API for auth and cart state
 
 ### Backend
 
@@ -41,36 +51,129 @@ The project is designed as a beginner-friendly but scalable full-stack app. User
 - Mongoose
 - JWT authentication
 
-### Tooling
+### Tooling and Quality
 
 - ESLint
-- PostCSS
-- Vercel for frontend deployment
-- Render for backend deployment
+- Prettier
+- Jest
+- Supertest
+- GitHub Actions
+- Dependabot
 
-## Folder Structure
+### Deployment
 
-```text
-src/
-  components/
-  contexts/
-  pages/
-  services/
-server/
-  controllers/
-  models/
-  routes/
-  services/
-  utils/
-```
+- Vercel for frontend hosting
+- GitHub Actions based deployment pipeline for AWS EC2 backend rollout
 
-## Getting Started
+## Architecture
+
+Noorify follows a practical full-stack JavaScript architecture with clear boundaries between presentation, application state, API handling, and persistence.
+
+### Frontend Architecture
+
+The frontend lives in `src/` and is organized by responsibility:
+
+- `pages/` contains route-level views such as product listing, cart, checkout, profile, and admin management
+- `components/` contains reusable UI building blocks
+- `contexts/` manages shared client-side state like authentication and cart state
+- `services/` contains API and browser-storage interaction logic
+- `data/` contains the shared product catalog used for fallback and recommendation consistency
+
+The UI is API-driven where available, with safe fallbacks in places where graceful degradation improves resilience.
+
+### Backend Architecture
+
+The backend lives in `server/` and uses an MVC-style structure:
+
+- `routes/` defines HTTP endpoints
+- `controllers/` contains request validation and endpoint behavior
+- `models/` defines Mongoose schemas
+- `services/` contains operational logic such as product seeding
+- `middleware/` handles shared request concerns like authentication
+- `utils/` contains response shaping and reusable helpers
+
+This separation keeps business logic isolated and improves testability.
+
+### Data Flow
+
+At a high level, the user flow works like this:
+
+1. The React client calls API-backed service functions
+2. Express routes delegate request handling to controllers
+3. Controllers validate input and query MongoDB through Mongoose models
+4. Responses are normalized before being returned to the client
+5. Context providers manage session, cart, and profile state on the frontend
+
+## CI/CD Workflow
+
+The project includes GitHub Actions automation for both validation and deployment.
+
+### Continuous Integration
+
+On every push and pull request to `main`, GitHub Actions:
+
+- checks out the repository
+- installs dependencies with `npm ci`
+- runs ESLint with `npm run lint`
+- runs Jest tests with `npm test`
+
+This ensures code quality and test coverage gates are enforced before deployment.
+
+### Continuous Deployment
+
+The repository also includes an EC2 deployment job triggered on push to `main` after CI passes. The workflow:
+
+- connects to EC2 using SSH
+- fetches the latest code
+- resets the server checkout to `origin/main`
+- installs dependencies
+- builds the project
+- restarts the backend process using `pm2` when available
+
+### Dependency Automation
+
+Dependabot is configured to:
+
+- check npm dependencies weekly
+- check GitHub Actions dependencies weekly
+- limit open update PRs to 5
+
+## Testing Strategy
+
+The project includes both unit and integration test coverage.
+
+### Unit Testing
+
+Jest is used for isolated testing of utility functions and route behavior. Current examples include:
+
+- utility response formatting
+- authentication route behavior
+- invalid login/signup edge cases
+
+### Integration Testing
+
+Integration tests use:
+
+- Jest
+- Supertest
+- `mongodb-memory-server`
+
+These tests validate real API + database interaction in memory, including:
+
+- `POST` requests that create and persist records
+- `GET` requests that return paginated data from MongoDB
+
+### Current Philosophy
+
+The testing setup is lightweight, fast, and practical. It focuses on validating critical backend behavior without overcomplicating the local developer workflow.
+
+## Setup Instructions
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20 recommended
 - npm
-- MongoDB locally, or a MongoDB Atlas connection string
+- MongoDB locally or a MongoDB Atlas connection string
 
 ### 1. Clone the repository
 
@@ -87,13 +190,7 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a `.env` file from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Example values:
+Create a `.env` file in the project root:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3001
@@ -103,7 +200,7 @@ JWT_SECRET=replace-me
 CORS_ORIGIN=http://localhost:5173
 ```
 
-### 4. Start the project
+### 4. Start the application
 
 Frontend:
 
@@ -123,42 +220,52 @@ Run both together:
 npm run dev:full
 ```
 
-Optional in-memory MongoDB for development:
+Optional in-memory MongoDB:
 
 ```bash
 npm run dev:db
 ```
 
-## Local URLs
+### 5. Quality checks
+
+Lint:
+
+```bash
+npm run lint
+```
+
+Format:
+
+```bash
+npm run format
+```
+
+Tests:
+
+```bash
+npm test
+```
+
+### Local URLs
 
 - Frontend: [http://localhost:5173](http://localhost:5173)
 - Backend: [http://localhost:3001](http://localhost:3001)
 
-## Key Pages
+## API Overview
 
-- `/` Home page
-- `/products` Product listing and recommendations
-- `/admin/products` Admin product management
-- `/cart` Cart page
-- `/profile` Profile and order history
-- `/skin-test` Skin assessment flow
-
-## API Endpoints
-
-### Products
+### Product Endpoints
 
 - `GET /api/products`
-- `GET /api/products/:id` (add if implemented later)
 - `GET /api/products/recommend/:id`
 - `POST /api/products`
 - `PUT /api/products/:id`
 - `DELETE /api/products/:id`
 
-### Recommendations
+### Recommendation Endpoint
 
 - `POST /api/recommend`
 
-Request body:
+Example request:
 
 ```json
 {
@@ -167,52 +274,73 @@ Request body:
 }
 ```
 
-### Auth and Orders
+### Authentication and Orders
 
 - `POST /api/auth/signup`
 - `POST /api/auth/login`
 - `GET /api/orders`
 - `POST /api/orders`
 
-## Production Deployment
+## Repository Structure
 
-### Frontend on Vercel
+```text
+src/
+  components/
+  contexts/
+  data/
+  pages/
+  services/
+  utils/
 
-1. Import the GitHub repo into Vercel.
-2. Set framework preset to `Vite`.
-3. Add `VITE_API_BASE_URL` pointing to the deployed backend.
-4. Deploy.
+server/
+  controllers/
+  lib/
+  middleware/
+  models/
+  routes/
+  services/
+  utils/
 
-### Backend on Render
+tests/
+  server/
+    integration/
+    routes/
+    utils/
 
-1. Create a new Web Service from the same repo.
-2. Build command: `npm install`
-3. Start command: `node server/index.js`
-4. Add `PORT`, `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGIN`.
-5. Deploy and verify `/api/health`.
+.github/
+  workflows/
+```
 
-## Screenshots
+## Why This Project Stands Out
 
-Add screenshots before sharing the repo publicly.
+Noorify is more than a UI demo. It demonstrates the ability to:
 
-- `[Home page screenshot]`
-- `[Products page screenshot]`
-- `[Admin dashboard screenshot]`
-- `[Cart and checkout screenshot]`
-- `[Profile / orders screenshot]`
+- design and ship a complete full-stack product experience
+- structure frontend and backend code for maintainability
+- introduce testing and CI/CD into an evolving codebase
+- build deployment automation for production environments
+- improve existing systems safely without breaking functionality
 
-## Interview Talking Points
-
-- Full-stack CRUD architecture with React, Express, and MongoDB
-- Environment-based frontend/backend deployment setup
-- API fallback strategy and frontend error handling
-- Rule-based recommendation system designed to be ML-upgradeable later
-- Separation of concerns across routes, controllers, services, and UI components
+For recruiters and hiring managers, this project reflects practical product engineering skills rather than isolated tutorial code.
 
 ## Future Improvements
 
-- Server-side pagination and sorting controls in the UI
-- Role-based admin access control
-- Cloud image storage instead of third-party hotlinked image URLs
-- Unit and integration tests for controllers and pages
-- Smarter recommendation ranking using embeddings or user history
+- Add role-based admin authorization
+- Move mock/localStorage auth and order flows fully behind the backend API
+- Add frontend component tests and route-level UI tests
+- Add API contract tests and test coverage reporting in CI
+- Add Docker support for local development and production parity
+- Add centralized logging and observability for the backend
+- Introduce image upload/storage instead of third-party hotlinked assets
+- Improve recommendation logic with embeddings or user behavior signals
+
+## Contact / Talking Points
+
+If you are using this project in interviews or your portfolio, strong discussion topics include:
+
+- full-stack CRUD design
+- API-backed React architecture
+- fault-tolerant frontend fallback patterns
+- automated testing with Jest + Supertest + in-memory MongoDB
+- GitHub Actions based CI/CD and EC2 deployment automation
+- product-focused frontend engineering with operational discipline
